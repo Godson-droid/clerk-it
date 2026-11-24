@@ -1,0 +1,72 @@
+{
+  "ts": "2026-11-24T17:01:39Z",
+  "block": 30596283,
+  "spot_usdt_per_whsk": 0.08081600397193602,
+  "anchor_usdt_per_whsk": 0.08080862496346113,
+  "twap_tick": -301482,
+  "deviation_bps": 0.913146149712496,
+  "gas_per_fill_usdt": 0.004320795885932062,
+  "leader": null,
+  "clerks": {
+    "A": {
+      "name": "Tight",
+      "params": {
+        "band_bps": 75,
+        "stop_bps": 150,
+        "max_hold_s": 43200,
+        "cooldown_s": 3600
+      },
+      "closed_trades": 0,
+      "net_pnl_usdt": 0.0,
+      "open_position": null,
+      "equity_usdt": 500.0,
+      "worst_drawdown_usdt": 0.0,
+      "eligible": false
+    },
+    "B": {
+      "name": "Standard",
+      "params": {
+        "band_bps": 125,
+        "stop_bps": 250,
+        "max_hold_s": 86400,
+        "cooldown_s": 7200
+      },
+      "closed_trades": 0,
+      "net_pnl_usdt": 0.0,
+      "open_position": null,
+      "equity_usdt": 500.0,
+      "worst_drawdown_usdt": 0.0,
+      "eligible": false
+    },
+    "C": {
+      "name": "Selective",
+      "params": {
+        "band_bps": 200,
+        "stop_bps": 400,
+        "max_hold_s": 172800,
+        "cooldown_s": 14400
+      },
+      "closed_trades": 0,
+      "net_pnl_usdt": 0.0,
+      "open_position": null,
+      "equity_usdt": 500.0,
+      "worst_drawdown_usdt": 0.0,
+      "eligible": false
+    },
+    "D": {
+      "name": "Fat Tail",
+      "params": {
+        "band_bps": 350,
+        "stop_bps": 500,
+        "max_hold_s": 259200,
+        "cooldown_s": 28800
+      },
+      "closed_trades": 0,
+      "net_pnl_usdt": 0.0,
+      "open_position": null,
+      "equity_usdt": 500.0,
+      "worst_drawdown_usdt": 0.0,
+      "eligible": false
+    }
+  }
+}

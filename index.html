@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clerk It — a trading tournament on HashKey Chain</title>
+<meta name="description" content="Four clerks paper trade the same HSKSwap pool under frozen rules. Only the clerk that earns it may trade live, inside an on chain vault it cannot widen.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0c10; --bg2:#0d1015;
+    --panel:#10141b; --panel2:#131926; --inset:#0c0f14;
+    --line:#1f2733; --line2:#2a3547;
+    --text:#e9edf3; --muted:#93a0b4; --faint:#626f83;
+    --gold:#d9a441; --gold-dim:#8a6a2f;
+    --green:#3fb97f; --red:#e0655f; --amber:#e0a63f; --blue:#5ea8e8;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1260px;margin:0 auto;padding:0 22px 64px}
+
+  /* top bar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:14px}
+  .glyph{width:42px;height:42px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--inset);display:flex;align-items:center;justify-content:center;flex:none}
+  .glyph svg{display:block}
+  .brand h1{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .brand p{color:var(--muted);font-size:13px}
+  .topmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);background:var(--panel);border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--muted);font-weight:500}
+  .pill b{color:var(--text);font-weight:600}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+  .dot.live{background:var(--green);box-shadow:0 0 0 3px rgba(63,185,127,.18)}
+  .dot.snap{background:var(--amber);box-shadow:0 0 0 3px rgba(224,166,63,.15)}
+
+  /* hero stats */
+  .hero{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+  .stat .k{font-size:11.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--faint)}
+  .stat .v{font-family:var(--mono);font-size:24px;font-weight:600;margin-top:5px;letter-spacing:-.01em}
+  .stat .s{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .pos{color:var(--green)} .neg{color:var(--red)}
+
+  /* deviation gauge */
+  .gauge-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-top:14px}
+  .gauge-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .gauge-head h2{font-size:14px;font-weight:700}
+  .gauge-head p{color:var(--muted);font-size:13px}
+  .gauge{position:relative;height:34px;margin:16px 6px 4px}
+  .gauge .track{position:absolute;left:0;right:0;top:15px;height:4px;background:var(--line2);border-radius:2px}
+  .gauge .zero{position:absolute;left:50%;top:8px;width:1px;height:18px;background:var(--faint)}
+  .gauge .band{position:absolute;top:11px;width:2px;height:12px;background:var(--gold-dim)}
+  .gauge .band span{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--faint);font-family:var(--mono);white-space:nowrap}
+  .gauge .needle{position:absolute;top:4px;width:2px;height:26px;background:var(--gold);transition:left .6s ease}
+  .gauge .needle::after{content:"";position:absolute;top:-5px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top:6px solid var(--gold)}
+  .gauge-scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--faint);margin:2px 2px 0}
+
+  /* layout */
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 392px;gap:14px;margin-top:14px;align-items:start}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .card + .card{margin-top:14px}
+  .card h2{font-size:15px;font-weight:700;display:flex;align-items:center;gap:9px}
+  .card h2 .tag{margin-left:auto}
+  .card .sub{color:var(--muted);font-size:13px;margin-top:3px}
+  .tag{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line2);color:var(--muted);border-radius:999px;padding:3px 9px}
+  .tag.gold{color:var(--gold);border-color:var(--gold-dim)}
+  .tag.amber{color:var(--amber);border-color:#6b5322}
+
+  /* standings table */
+  table{width:100%;border-collapse:collapse;margin-top:14px}
+  th{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);text-align:right;padding:8px 10px;border-bottom:1px solid var(--line)}
+  th:first-child{text-align:left}
+  td{padding:13px 10px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono);font-size:13.5px;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  td:first-child{text-align:left;font-family:var(--sans)}
+  tr.leader-row td{background:rgba(217,164,65,.05)}
+  tr.leader-row td:first-child{box-shadow:inset 3px 0 0 var(--gold)}
+  .clerk{display:flex;align-items:center;gap:11px}
+  .avatar{width:34px;height:34px;border-radius:9px;background:var(--panel2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none}
+  tr.leader-row .avatar{border-color:var(--gold-dim);color:var(--gold)}
+  .clerk .nm{font-weight:600;font-size:14.5px}
+  .clerk .pr{color:var(--faint);font-size:12px;font-family:var(--mono)}
+  .badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#14100a;background:var(--gold);border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px}
+  .status{font-family:var(--sans);font-size:12.5px;color:var(--muted)}
+  .status.elig{color:var(--green);font-weight:600}
+  .leader-note{margin-top:14px;border:1px solid var(--line);background:var(--inset);border-radius:10px;padding:13px 15px;font-size:13.5px;color:var(--muted)}
+  .leader-note b{color:var(--text)}
+  .leader-note .gold{color:var(--gold);font-weight:600}
+
+  /* activity */
+  .feed{margin-top:8px}
+  .evt{display:flex;gap:13px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .evt:last-child{border-bottom:none;padding-bottom:2px}
+  .evt .ic{width:30px;height:30px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--line2);background:var(--inset);font-size:13px}
+  .evt.entry .ic{color:var(--blue);border-color:#2c4a6b}
+  .evt.exit .ic{color:var(--gold);border-color:var(--gold-dim)}
+  .evt.leadership .ic{color:#14100a;background:var(--gold);border-color:var(--gold)}
+  .evt.pass .ic{color:var(--faint)}
+  .evt .tt{font-weight:600;font-size:14px}
+  .evt .dd{color:var(--muted);font-size:13px;margin-top:1px}
+  .evt .tm{margin-left:auto;flex:none;text-align:right;font-family:var(--mono);font-size:11.5px;color:var(--faint);padding-top:3px}
+  .empty{color:var(--faint);font-size:13.5px;padding:14px 0 4px}
+
+  /* vault */
+  .kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+  .kv:last-of-type{border-bottom:none}
+  .kv .kk{color:var(--muted)}
+  .kv .vv{font-family:var(--mono);font-weight:500;text-align:right}
+  .vault-note{font-size:13px;color:var(--muted);margin-top:12px}
+  .vault-note b{color:var(--text)}
+  .addr{font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all}
+
+  /* chat */
+  .chatlog{display:flex;flex-direction:column;gap:10px;margin-top:14px;max-height:380px;overflow-y:auto;padding-right:2px}
+  .msg{max-width:92%;padding:10px 13px;border-radius:12px;font-size:13.5px;line-height:1.55;white-space:pre-wrap}
+  .msg.bot{background:var(--inset);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+  .msg.user{background:var(--panel2);border:1px solid var(--line2);align-self:flex-end;border-bottom-right-radius:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+  .chip{border:1px solid var(--line2);background:var(--inset);color:var(--muted);border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer;font-family:var(--sans);transition:all .15s}
+  .chip:hover{color:var(--text);border-color:var(--gold-dim)}
+  .chatin{display:flex;gap:8px;margin-top:12px}
+  .chatin input{flex:1;background:var(--inset);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:10px 13px;font-size:13.5px;font-family:var(--sans);outline:none}
+  .chatin input:focus{border-color:var(--gold-dim)}
+  .chatin button{background:var(--gold);color:#14100a;border:none;border-radius:10px;padding:0 18px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:var(--sans)}
+  .chatin button:hover{background:#e5b556}
+
+  /* explainer */
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
+  .step{background:var(--inset);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .step .n{font-family:var(--mono);color:var(--gold);font-size:12px;font-weight:600}
+  .step h3{font-size:14px;font-weight:700;margin:7px 0 5px}
+  .step p{color:var(--muted);font-size:13px}
+  .freeze{margin-top:14px;font-size:13px;color:var(--faint)}
+  .freeze b{color:var(--muted)}
+
+  footer{margin-top:26px;border-top:1px solid var(--line);padding-top:18px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:var(--faint);font-size:12.5px}
+
+  @media (max-width:1020px){
+    .hero{grid-template-columns:repeat(2,1fr)}
+    .grid{grid-template-columns:1fr}
+    .steps{grid-template-columns:repeat(2,1fr)}
+    table{display:block;overflow-x:auto}
+  }
+  @media (max-width:560px){ .steps{grid-template-columns:1fr} .stat .v{font-size:20px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="glyph" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z" stroke="#d9a441" stroke-width="1.6"/><path d="M4 18V5.5M8.5 7.5h7M8.5 11h7M8.5 14.5h4" stroke="#d9a441" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </div>
+      <div>
+        <h1>Clerk It</h1>
+        <p>A trading tournament with one rule: earn the right to trade.</p>
+      </div>
+    </div>
+    <div class="topmeta">
+      <span class="pill"><span class="dot" id="feedDot"></span><span id="feedLabel">Connecting to the pool</span></span>
+      <span class="pill">Network <b>HashKey Chain · 177</b></span>
+      <span class="pill">Venue <b>HSKSwap V3</b></span>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="stat"><div class="k">Spot price</div><div class="v" id="spotV">…</div><div class="s">USDT per WHSK, WHSK/USDT 0.3% pool</div></div>
+    <div class="stat"><div class="k">One hour TWAP anchor</div><div class="v" id="anchorV">…</div><div class="s">The pool's own history, no external oracle</div></div>
+    <div class="stat"><div class="k">Deviation</div><div class="v" id="devV">…</div><div class="s" id="devS">Spot versus the anchor, in basis points</div></div>
+    <div class="stat"><div class="k">Cost of a shadow fill</div><div class="v" id="gasV">…</div><div class="s">Real gas per fill, deducted from every clerk</div></div>
+  </div>
+
+  <div class="gauge-card">
+    <div class="gauge-head">
+      <h2>Deviation gauge</h2>
+      <p>Entry bands sit at ±75, ±125, ±200 and ±350 bps. A clerk may only open when the needle crosses its band.</p>
+    </div>
+    <div class="gauge" id="gauge">
+      <div class="track"></div><div class="zero"></div>
+      <div class="needle" id="needle" style="left:50%"></div>
+    </div>
+    <div class="gauge-scale"><span>−400 bps</span><span>−200</span><span>0</span><span>+200</span><span>+400 bps</span></div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>Tournament standings <span class="tag" id="standingsTag">Shadow season</span></h2>
+        <p class="sub">Four clerks, one pool, frozen rules. Every fill is priced through the real QuoterV2 at 50 USDT with gas deducted. Standings update every five minutes.</p>
+        <table>
+          <thead><tr>
+            <th>Clerk</th><th>Band</th><th>Closed</th><th>Open position</th><th>Net P&amp;L</th><th>Equity</th><th>Worst DD</th><th>Status</th>
+          </tr></thead>
+          <tbody id="standingsBody"><tr><td colspan="8" class="empty">Loading the standings…</td></tr></tbody>
+        </table>
+        <div class="leader-note" id="leaderNote">Loading…</div>
+      </div>
+
+      <div class="card">
+        <h2>Recent activity <span class="tag" id="activityTag">Hash chained log</span></h2>
+        <p class="sub">Entries, exits and passes from the tournament log. Every record is hash chained to the one before it, so the history cannot be quietly rewritten.</p>
+        <div class="feed" id="feed"><p class="empty">Loading the log…</p></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>ClerkVault <span class="tag amber">Pending funding</span></h2>
+        <p class="sub">The on chain leash for live trading. The contract is written; deployment waits on the project wallet being funded, and no live trade can happen before a clerk has earned leadership.</p>
+        <div style="margin-top:10px">
+          <div class="kv"><span class="kk">Deployment status</span><span class="vv" style="color:var(--amber)">Not deployed yet</span></div>
+          <div class="kv"><span class="kk">Live trade size</span><span class="vv">10 USDT</span></div>
+          <div class="kv"><span class="kk">Maximum trade size</span><span class="vv">25 USDT</span></div>
+          <div class="kv"><span class="kk">Daily loss cap</span><span class="vv">5 USDT</span></div>
+          <div class="kv"><span class="kk">Per trade cooldown</span><span class="vv">3,600 seconds</span></div>
+          <div class="kv"><span class="kk">Slippage guard</span><span class="vv">Fresh quote minimum out</span></div>
+          <div class="kv"><span class="kk">Who may trade</span><span class="vv">The leader, via the agent only</span></div>
+          <div class="kv"><span class="kk">Who may change limits</span><span class="vv">The owner only</span></div>
+        </div>
+        <p class="vault-note"><b>The agent cannot widen its own limits.</b> The vault holds them on chain. The owner can pause the vault at any time, and while paused every trade reverts.</p>
+        <p class="vault-note">Owner wallet<br><span class="addr">0x6D510373C8689E20706955395B89E5CdF38d3318</span></p>
+      </div>
+
+      <div class="card">
+        <h2>Ask the clerk desk <span class="tag gold">Live data</span></h2>
+        <p class="sub">Answers come from the live standings and the tournament log, quoted exactly. Nothing is invented: if there is nothing to report yet, it will say so.</p>
+        <div class="chatlog" id="chatlog"></div>
+        <div class="chips" id="chips"></div>
+        <form class="chatin" id="chatform">
+          <input id="chatinput" type="text" placeholder="Ask about positions, P and L, risk…" autocomplete="off">
+          <button type="submit">Ask</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <h2>How the tournament works</h2>
+    <p class="sub">Clerk It began as an arbitrage idea. A census of HSKSwap found exactly one deep pool, so there was no second leg to arbitrage against. The tournament is the honest answer to that fact: prove a strategy in public, on this pool, before a single real unit moves.</p>
+    <div class="steps">
+      <div class="step"><div class="n">01</div><h3>Four clerks, one pool</h3><p>Clerks A to D watch the same WHSK/USDT pool with different mean reversion bands, from Tight at 75 bps to Fat Tail at 350 bps. All trade on paper at the same time, so conditions are identical.</p></div>
+      <div class="step"><div class="n">02</div><h3>No free fills</h3><p>Every shadow entry and exit is priced through the real QuoterV2 at the full 50 USDT size, so the 0.3% pool fee and real price impact are inside every fill. Gas is deducted per fill at the live gas price.</p></div>
+      <div class="step"><div class="n">03</div><h3>Promotion must be earned</h3><p>A clerk becomes eligible only with at least 5 closed trades and a positive net P and L after costs. The eligible clerk with the highest net P and L leads. No eligible clerk means no leader, and no live trades. Silence is a valid state.</p></div>
+      <div class="step"><div class="n">04</div><h3>Live, on a leash</h3><p>Only the leader may trade live, only through ClerkVault, only at 10 USDT a trade. The vault enforces a 25 USDT maximum, a 5 USDT daily loss cap and a one hour cooldown, and the owner can pause it at any time.</p></div>
+    </div>
+    <p class="freeze"><b>Frozen rules.</b> The anchor window, roster, fill model, scoring, promotion rule and vault limits were frozen on 24 November 2026, before the engine collected any data, and are pinned by a SHA 256 hash in the design record. Any change starts a new tournament from zero; nothing is ever tuned on this tournament's own data and presented as its result.</p>
+  </div>
+
+  <footer>
+    <span>Clerk It · HSK Chain Horizon, Track 1 (AI Agent Trading) · Built by Godson</span>
+    <span><a href="https://hsk.blockscout.com/address/0x4ff515761864e7838B0AdB8b5b2B8B7A068905dC" target="_blank" rel="noopener">The pool on Blockscout</a> · <a href="https://github.com/Godson-droid/clerk-it" target="_blank" rel="noopener">Source and data</a></span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const RPC = "https://mainnet.hsk.xyz";
+const POOL = "0x4ff515761864e7838B0AdB8b5b2B8B7A068905dC";
+const SLOT0 = "0x3850c7bd", OBSERVE = "0x883bdbfd";
+const CLERK_ORDER = ["A","B","C","D"];
+let S = null, A = null;
+let P = null; // pool state {spot, anchor, deviation_bps, block, live}
+
+const $ = id => document.getElementById(id);
+const fmt = (v, d=4) => (v==null||isNaN(v)) ? "…" : Number(v).toLocaleString("en-US",{minimumFractionDigits:d, maximumFractionDigits:d});
+const fmtSigned = (v, d=4) => (v>0?"+":"") + fmt(v, d);
+const fmtBps = v => (v>0?"+":"") + fmt(v, 1);
+function relTime(ts){
+  const t = new Date(ts).getTime(); if (isNaN(t)) return "";
+  const s = Math.max(0, (Date.now()-t)/1000);
+  if (s < 90) return "just now";
+  if (s < 3600) return Math.round(s/60) + " min ago";
+  if (s < 86400) return Math.round(s/3600) + " h ago";
+  return Math.round(s/86400) + " d ago";
+}
+function clockTime(ts){
+  const d = new Date(ts); if (isNaN(d)) return ts || "";
+  return d.toISOString().slice(11,16) + " UTC";
+}
+function ageText(sec){
+  if (sec == null) return "";
+  if (sec < 3600) return Math.round(sec/60) + "m";
+  if (sec < 86400) return Math.floor(sec/3600) + "h " + Math.round((sec%3600)/60) + "m";
+  return Math.floor(sec/86400) + "d " + Math.floor((sec%86400)/3600) + "h";
+}
+
+/* ---------- gauge bands ---------- */
+(function buildGauge(){
+  const g = $("gauge");
+  [75,125,200,350].forEach(b=>{
+    [-1,1].forEach(sign=>{
+      const el = document.createElement("div");
+      el.className = "band";
+      el.style.left = `calc(${50 + sign*b/8}% )`;
+      el.style.transform = "translateX(-50%)";
+      if (sign > 0) el.innerHTML = `<span>${b}</span>`;
+      g.appendChild(el);
+    });
+  });
+})();
+
+/* ---------- live pool read ---------- */
+let rpcId = 0;
+async function rpcCall(method, params){
+  const r = await fetch(RPC, {method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({jsonrpc:"2.0", id:++rpcId, method, params})});
+  const j = await r.json();
+  if (j.error) throw new Error(j.error.message || "rpc error");
+  return j.result;
+}
+const pad32 = n => BigInt(n).toString(16).padStart(64, "0");
+function wordAt(hex, i){
+  return BigInt("0x" + hex.slice(2 + i*64, 2 + (i+1)*64));
+}
+function signedWord(hex, i){
+  const v = wordAt(hex, i);
+  return v >= (1n<<255n) ? v - (1n<<256n) : v;
+}
+async function refreshPool(){
+  try {
+    const blockHex = await rpcCall("eth_blockNumber", []);
+    const slot0 = await rpcCall("eth_call", [{to: POOL, data: SLOT0}, "latest"]);
+    const sqrtp = Number(wordAt(slot0, 0));
+    const spot = Math.pow(sqrtp / Math.pow(2, 96), 2) * 1e12;
+    const obsData = OBSERVE + pad32(32) + pad32(2) + pad32(3600) + pad32(0);
+    const obs = await rpcCall("eth_call", [{to: POOL, data: obsData}, "latest"]);
+    const off = Number(wordAt(obs, 0)) / 32;
+    const cumOld = signedWord(obs, off+1), cumNow = signedWord(obs, off+2);
+    let diff = cumNow - cumOld;
+    let tick = diff / 3600n;
+    if (diff % 3600n !== 0n && diff < 0n) tick -= 1n;
+    const anchor = Math.pow(1.0001, Number(tick)) * 1e12;
+    P = {spot, anchor, deviation_bps: (spot/anchor - 1) * 10000, block: parseInt(blockHex, 16), live: true};
+  } catch(e) {
+    if (S) P = {spot: S.spot_usdt_per_whsk, anchor: S.anchor_usdt_per_whsk,
+                deviation_bps: S.deviation_bps, block: S.block, live: false};
+  }
+  renderPool();
+}
+function renderPool(){
+  if (!P) return;
+  $("spotV").textContent = fmt(P.spot, 6);
+  $("anchorV").textContent = fmt(P.anchor, 6);
+  const dev = $("devV");
+  dev.textContent = fmtBps(P.deviation_bps) + " bps";
+  dev.className = "v " + (Math.abs(P.deviation_bps) < 75 ? "" : (P.deviation_bps > 0 ? "neg" : "pos"));
+  $("devS").textContent = Math.abs(P.deviation_bps) < 75
+    ? "Inside every entry band; no clerk may open here"
+    : "Outside at least one entry band";
+  if (S) $("gasV").textContent = fmt(S.gas_per_fill_usdt, 4) + " USDT";
+  const pct = Math.max(0, Math.min(100, 50 + P.deviation_bps/8));
+  $("needle").style.left = pct + "%";
+  const dot = $("feedDot"), label = $("feedLabel");
+  if (P.live) { dot.className = "dot live"; label.innerHTML = "Live pool feed · block <b>" + P.block.toLocaleString() + "</b>"; }
+  else { dot.className = "dot snap"; label.innerHTML = "Engine snapshot · block <b>" + (P.block||0).toLocaleString() + "</b>"; }
+}
+
+/* ---------- standings + activity ---------- */
+async function loadData(){
+  try {
+    const [sr, ar] = await Promise.all([
+      fetch("standings.json", {cache:"no-store"}), fetch("activity.json", {cache:"no-store"})
+    ]);
+    S = await sr.json(); A = await ar.json();
+    renderStandings(); renderFeed();
+    if (!P) refreshPool(); else renderPool();
+  } catch(e) { /* keep last good render */ }
+}
+function renderStandings(){
+  if (!S) return;
+  const body = $("standingsBody");
+  body.innerHTML = "";
+  const leaderId = S.leader ? S.leader.clerk : null;
+  CLERK_ORDER.forEach(cid => {
+    const c = S.clerks[cid]; if (!c) return;
+    const tr = document.createElement("tr");
+    if (cid === leaderId) tr.className = "leader-row";
+    const pos = c.open_position;
+    const posHtml = pos
+      ? `<span class="${pos.direction === "long" ? "pos" : "neg"}">${pos.direction.toUpperCase()}</span> ${fmt(pos.whsk_amount, 2)} WHSK<br><span style="color:var(--faint);font-size:12px">@ ${fmt(pos.entry_price, 6)} · ${ageText(pos.age_s)} · ${fmtSigned(pos.unrealised_pnl_usdt)} USDT</span>`
+      : `<span style="color:var(--faint)">Flat</span>`;
+    let status, statusCls = "status";
+    if (cid === leaderId) { status = "Leading"; statusCls += " elig"; }
+    else if (c.eligible) status = "Eligible";
+    else if (c.closed_trades === 0) status = "No closes yet";
+    else status = "Not eligible yet";
+    tr.innerHTML = `
+      <td><div class="clerk"><div class="avatar">${cid}</div><div>
+        <div class="nm">${c.name}${cid === leaderId ? '<span class="badge">Leader</span>' : ""}</div>
+        <div class="pr">±${c.params.band_bps} band · stop ${c.params.stop_bps} · hold ${c.params.max_hold_s/3600}h</div>
+      </div></div></td>
+      <td>${c.params.band_bps} bps</td>
+      <td>${c.closed_trades}</td>
+      <td>${posHtml}</td>
+      <td class="${c.net_pnl_usdt > 0 ? "pos" : (c.net_pnl_usdt < 0 ? "neg" : "")}">${fmtSigned(c.net_pnl_usdt)} USDT</td>
+      <td>${fmt(c.equity_usdt, 2)}</td>
+      <td>${fmt(c.worst_drawdown_usdt)}</td>
+      <td><span class="${statusCls}">${status}</span></td>`;
+    body.appendChild(tr);
+  });
+  const note = $("leaderNote");
+  if (S.leader) {
+    note.innerHTML = `<span class="gold">Leader: Clerk ${S.leader.clerk}.</span> ${S.leader.reason}. Only this clerk may place live trades, and only through ClerkVault once it is deployed.`;
+  } else {
+    note.innerHTML = `<b>No leader yet.</b> Promotion requires at least 5 closed shadow trades and a positive net P and L after real costs. Until a clerk earns it, the live executor stays silent. Standings as of ${clockTime(S.ts)} (block ${Number(S.block).toLocaleString()}).`;
+  }
+}
+const EVT_ICON = {entry:"↗", exit:"↘", leadership:"◆", pass:"○"};
+function renderFeed(){
+  if (!A) return;
+  const feed = $("feed");
+  if (!A.items || !A.items.length) {
+    feed.innerHTML = `<p class="empty">The log holds only cycle checks so far. The first entry or exit will appear here the moment a clerk acts.</p>`;
+    return;
+  }
+  feed.innerHTML = "";
+  A.items.forEach(it => {
+    const d = document.createElement("div");
+    d.className = "evt " + it.kind;
+    d.innerHTML = `<div class="ic">${EVT_ICON[it.kind] || "·"}</div>
+      <div><div class="tt"></div><div class="dd"></div></div>
+      <div class="tm">${clockTime(it.ts)}<br>${relTime(it.ts)}</div>`;
+    d.querySelector(".tt").textContent = it.title;
+    d.querySelector(".dd").textContent = it.detail;
+    feed.appendChild(d);
+  });
+}
+
+/* ---------- chat ---------- */
+const chatlog = $("chatlog");
+function addMsg(cls, text){
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  d.textContent = text;
+  chatlog.appendChild(d);
+  chatlog.scrollTop = chatlog.scrollHeight;
+  return d;
+}
+function clerkLine(cid){
+  const c = S.clerks[cid];
+  return `Clerk ${cid} (${c.name}): ${c.closed_trades} closed, net ${fmtSigned(c.net_pnl_usdt)} USDT, equity ${fmt(c.equity_usdt, 2)} USDT, worst drawdown ${fmt(c.worst_drawdown_usdt)} USDT`;
+}
+function leaderAnswer(){
+  if (!S.leader) {
+    const best = CLERK_ORDER.map(cid => `${cid} has ${S.clerks[cid].closed_trades} of 5 closes`).join(", ");
+    return `There is no leader yet, and I will not dress that up. Promotion requires at least 5 closed shadow trades and a positive net P and L after real costs. Right now ${best}, and every net P and L sits at ${fmtSigned(0)} USDT, so no clerk is eligible and no live trade may be placed.`;
+  }
+  const c = S.clerks[S.leader.clerk];
+  return `Clerk ${S.leader.clerk} (${c.name}) leads. The reason on record: ${S.leader.reason}. Its full line: ${c.closed_trades} closed trades, net ${fmtSigned(c.net_pnl_usdt)} USDT, equity ${fmt(c.equity_usdt, 2)} USDT, worst drawdown ${fmt(c.worst_drawdown_usdt)} USDT.`;
+}
+function promotionAnswer(){
+  const lines = CLERK_ORDER.map(cid => {
+    const c = S.clerks[cid];
+    const need = Math.max(0, 5 - c.closed_trades);
+    return `Clerk ${cid} (${c.name}): ${c.closed_trades}/5 closes${need ? `, needs ${need} more` : ""}, net ${fmtSigned(c.net_pnl_usdt)} USDT${c.eligible ? " — eligible" : ""}`;
+  });
+  return `Promotion is a rule, not a vote. A clerk must close at least 5 shadow trades and hold a positive net P and L after pool fees and gas. The eligible clerk with the highest net P and L leads; ties break on more closes, then roster order.\n${lines.join("\n")}`;
+}
+function positionsAnswer(){
+  const open = CLERK_ORDER.filter(cid => S.clerks[cid].open_position);
+  if (!open.length) {
+    return `Every clerk is flat right now; there are no open positions to report. A clerk opens only when the spot price strays past its entry band from the one hour anchor. The current deviation is ${P ? fmtBps(P.deviation_bps) : "…"} bps and the tightest band is Clerk A's at 75 bps, so at this reading nobody is even close to an entry.`;
+  }
+  const lines = open.map(cid => {
+    const p = S.clerks[cid].open_position, c = S.clerks[cid];
+    return `Clerk ${cid} (${c.name}) is ${p.direction.toUpperCase()}: ${fmt(p.whsk_amount, 2)} WHSK entered at ${fmt(p.entry_price, 6)}, open for ${ageText(p.age_s)}, unrealised ${fmtSigned(p.unrealised_pnl_usdt)} USDT at the current spot`;
+  });
+  const flat = CLERK_ORDER.filter(cid => !S.clerks[cid].open_position)
+    .map(cid => `${cid} (${S.clerks[cid].name})`).join(", ");
+  return lines.join("\n") + (flat ? `\nFlat: ${flat}.` : "");
+}
+function pnlAnswer(){
+  const total = CLERK_ORDER.reduce((a, cid) => a + S.clerks[cid].net_pnl_usdt, 0);
+  const closes = CLERK_ORDER.reduce((a, cid) => a + S.clerks[cid].closed_trades, 0);
+  return `Standings as of ${clockTime(S.ts)}. Only closed round trips count toward net P and L; open positions are marked separately and never included.\n${CLERK_ORDER.map(clerkLine).join("\n")}\nAcross the desk: ${closes} closed trades, combined net ${fmtSigned(total)} USDT.`;
+}
+function sizingAnswer(){
+  return `Two sizes matter. In the shadow tournament every clerk trades a fixed 50 USDT notional per entry, scored against 500 USDT of marking capital. Live trading, once a leader exists and ClerkVault is deployed, is 10 USDT per trade. The vault's hard maximum is 25 USDT, there as headroom so a price move between quote and execution cannot push a valid trade over the cap. The executor only ever asks for 10.`;
+}
+function riskAnswer(){
+  return `The risk limits live in ClerkVault, on chain, where the agent cannot reach them. Maximum trade 25 USDT. Daily loss cap 5 USDT, measured against a snapshot of portfolio value at the start of each UTC day; when the fall reaches the cap, trading halts. One trade per hour at most (3,600 second cooldown). Every trade carries a minimum amount out from a fresh quoter read, and the swap reverts if the pool cannot meet it. The owner can pause the vault at any time.\nDeployment status, honestly: the vault is not deployed yet. It waits on the project wallet being funded, so these limits are currently enforced by the contract code and the design freeze, not yet by a live contract.`;
+}
+function activityAnswer(){
+  const t = A ? A.today : {entries: 0, exits: 0};
+  const parts = [];
+  if (t.entries === 0 && t.exits === 0) {
+    parts.push(`Today (${t.date || "so far"}) the clerks have opened nothing and closed nothing. That is a result, not a gap in the record: the log shows every five minute check.`);
+  } else {
+    parts.push(`Today the desk recorded ${t.entries} entr${t.entries === 1 ? "y" : "ies"} and ${t.exits} exit${t.exits === 1 ? "" : "s"}.`);
+  }
+  if (A && A.last_cycle) {
+    parts.push(`The last check, at ${clockTime(A.last_cycle.ts)}, read a deviation of ${fmtBps(A.last_cycle.deviation_bps)} bps against the one hour anchor. The tightest entry band on the desk is 75 bps (Clerk A, Tight), and a round trip costs roughly 62 bps in pool fees and gas, so a move smaller than the band cannot pay for itself. That is why the clerks passed.`);
+  }
+  if (A && A.items) {
+    const sig = A.items.filter(i => i.kind !== "pass").slice(0, 2);
+    if (sig.length) parts.push("Most recent real events:\n" + sig.map(i => `· ${i.title} — ${i.detail}`).join("\n"));
+  }
+  return parts.join("\n");
+}
+function poolAnswer(){
+  if (!P) return "The pool read has not landed yet. Give it a moment and ask again.";
+  return `The WHSK/USDT pool (0.3% fee tier) right now: spot ${fmt(P.spot, 6)} USDT per WHSK, one hour TWAP anchor ${fmt(P.anchor, 6)}, deviation ${fmtBps(P.deviation_bps)} bps, at block ${Number(P.block).toLocaleString()}. ${P.live ? "That is a live read from the HashKey Chain RPC, taken just now." : "The live read is unreachable from here, so that is the engine's latest snapshot instead."} The anchor is the pool's own tick history over the last hour; no external price feed is trusted anywhere in this system.`;
+}
+function howAnswer(){
+  return `Four clerks paper trade the same WHSK/USDT pool under rules frozen before any data existed. Each uses a different mean reversion band around the pool's one hour TWAP, from 75 to 350 bps, and every fill is priced through the real quoter at 50 USDT with gas deducted, so the paper record carries real costs. The first clerk to close 5 trades with a positive net P and L leads, and only the leader may trade live, at 10 USDT a trade, through an on chain vault whose limits the agent cannot change. Ask me who is leading, what the pool is doing, or why the clerks passed, and I will answer from the record.`;
+}
+function answer(raw){
+  if (!S) return "The standings have not loaded yet. Ask me again in a few seconds.";
+  const q = raw.toLowerCase();
+  if (/\b(hi|hello|hey)\b/.test(q) && q.length < 24) return "Evening. I keep the tournament's books. Ask me who is leading, what the clerks hold, what the pool is doing, or why the last check was a pass, and I will answer from the live record.";
+  if (/(lead|winning|ahead|best clerk|top)/.test(q)) return leaderAnswer();
+  if (/(promot|eligible|qualif|earn|live trad)/.test(q)) return promotionAnswer();
+  if (/(position|open|holding|flat|long|short|exposure)/.test(q)) return positionsAnswer();
+  if (/(size|sizing|notional|how big|stake)/.test(q)) return sizingAnswer();
+  if (/(risk|limit|guardrail|vault|daily loss|cooldown|stop|cap|pause|safe)/.test(q)) return riskAnswer();
+  if (/(pass|spread)/.test(q)) return activityAnswer();
+  if (/(pool|price|spot|twap|anchor|deviation|market)/.test(q)) return poolAnswer();
+  if (/(today|did|activity|recent|happen|action|do)/.test(q)) return activityAnswer();
+  if (/(p&l|pnl|profit|loss|equity|standing|score|drawdown|perform|money|results)/.test(q)) return pnlAnswer();
+  if (/(how|work|tournament|explain|what is|about|arbitrage)/.test(q)) return howAnswer();
+  if (/why/.test(q)) return activityAnswer();
+  return "I answer from the tournament record only, so I cannot help with that one. I can tell you who is leading and why, what positions are open, the P and L and equity of every clerk, today's activity and why the clerks passed, the position sizes, the vault's risk limits, and what the pool is doing right now.";
+}
+const CHIPS = ["Who is leading and why", "What did the clerks do today", "Why did the last spread pass", "What are the risk limits", "What is the pool doing"];
+CHIPS.forEach(text => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = text;
+  b.addEventListener("click", () => { addMsg("user", text); addMsg("bot", answer(text)); });
+  $("chips").appendChild(b);
+});
+$("chatform").addEventListener("submit", e => {
+  e.preventDefault();
+  const inp = $("chatinput");
+  const v = inp.value.trim();
+  if (!v) return;
+  inp.value = "";
+  addMsg("user", v);
+  addMsg("bot", answer(v));
+});
+addMsg("bot", "This desk answers from the live tournament record: the standings file the engine rewrites every five minutes, and the hash chained log behind it. Figures are quoted exactly as recorded. Right now the tournament is young: no clerk has closed a trade yet, so there is no leader, and I will say that plainly rather than invent one.");
+loadData();
+refreshPool();
+setInterval(refreshPool, 30000);
+setInterval(loadData, 60000);
+</script>
+</body>
+</html>
