@@ -8,9 +8,9 @@ Each clerk watches the pool's spot price against its own one hour TWAP anchor an
 
 ## What lives here
 
-`index.html` is the public dashboard: live pool state read directly from the HashKey Chain RPC, the tournament standings, the recent activity feed, the vault panel, and a conversational interface that answers questions from the live standings and the hash chained tournament log.
+`index.html` is the public dashboard: a live price chart with the one hour TWAP anchor and the four entry bands, the tournament leaderboard with equity sparklines, the pool composition visual, the vault guardrails, and a conversational interface that answers questions from the live standings and the hash chained tournament log.
 
-`standings.json` and `activity.json` are the dashboard's data files. They are refreshed from the tournament engine every 15 minutes by `sync_data.py` and republished by `publish.py`.
+`standings.json`, `activity.json` and `history.json` are the dashboard's data files. They are refreshed from the tournament engine every 15 minutes by `sync_data.py` and republished by `publish.py`. `history.json` carries the price history series (tournament log cycles merged with the spread watch log), a per clerk equity series reconstructed from the log's exit fills, and a pool snapshot read live from the chain (with the Phase 0 census as fallback).
 
 `sync_data.py` copies the engine's standings and builds the trimmed activity extract from the tournament log. `publish.py` commits changed files through the Git Data API.
 

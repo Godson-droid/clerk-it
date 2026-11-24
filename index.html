@@ -7,162 +7,247 @@
 <meta name="description" content="Four clerks paper trade the same HSKSwap pool under frozen rules. Only the clerk that earns it may trade live, inside an on chain vault it cannot widen.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0a0c10; --bg2:#0d1015;
-    --panel:#10141b; --panel2:#131926; --inset:#0c0f14;
-    --line:#1f2733; --line2:#2a3547;
-    --text:#e9edf3; --muted:#93a0b4; --faint:#626f83;
-    --gold:#d9a441; --gold-dim:#8a6a2f;
-    --green:#3fb97f; --red:#e0655f; --amber:#e0a63f; --blue:#5ea8e8;
+    --bg:#060708; --bg2:#090b0d;
+    --panel:#0c0e11; --inset:#08090b;
+    --line:#1d2126; --line2:#2b3138;
+    --text:#edeade; --muted:#9aa1ab; --faint:#5f6771;
+    --gold:#d9a441; --gold-hi:#eec26a; --gold-dim:#7d5f27;
+    --green:#43c584; --red:#e0655f; --amber:#e0a63f; --blue:#6db3e8;
     --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
     --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    --radius:14px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
-  a{color:var(--blue);text-decoration:none}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:var(--gold-hi);text-decoration:none}
   a:hover{text-decoration:underline}
-  .wrap{max-width:1260px;margin:0 auto;padding:0 22px 64px}
-
-  /* top bar */
-  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:14px}
-  .glyph{width:42px;height:42px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--inset);display:flex;align-items:center;justify-content:center;flex:none}
-  .glyph svg{display:block}
-  .brand h1{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
-  .brand p{color:var(--muted);font-size:13px}
-  .topmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);background:var(--panel);border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--muted);font-weight:500}
-  .pill b{color:var(--text);font-weight:600}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
-  .dot.live{background:var(--green);box-shadow:0 0 0 3px rgba(63,185,127,.18)}
-  .dot.snap{background:var(--amber);box-shadow:0 0 0 3px rgba(224,166,63,.15)}
-
-  /* hero stats */
-  .hero{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
-  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
-  .stat .k{font-size:11.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--faint)}
-  .stat .v{font-family:var(--mono);font-size:24px;font-weight:600;margin-top:5px;letter-spacing:-.01em}
-  .stat .s{font-size:12.5px;color:var(--muted);margin-top:2px}
+  ::selection{background:var(--gold);color:#14100a}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 26px}
   .pos{color:var(--green)} .neg{color:var(--red)}
 
-  /* deviation gauge */
-  .gauge-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-top:14px}
-  .gauge-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
-  .gauge-head h2{font-size:14px;font-weight:700}
-  .gauge-head p{color:var(--muted);font-size:13px}
-  .gauge{position:relative;height:34px;margin:16px 6px 4px}
-  .gauge .track{position:absolute;left:0;right:0;top:15px;height:4px;background:var(--line2);border-radius:2px}
-  .gauge .zero{position:absolute;left:50%;top:8px;width:1px;height:18px;background:var(--faint)}
-  .gauge .band{position:absolute;top:11px;width:2px;height:12px;background:var(--gold-dim)}
-  .gauge .band span{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--faint);font-family:var(--mono);white-space:nowrap}
-  .gauge .needle{position:absolute;top:4px;width:2px;height:26px;background:var(--gold);transition:left .6s ease}
-  .gauge .needle::after{content:"";position:absolute;top:-5px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top:6px solid var(--gold)}
-  .gauge-scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--faint);margin:2px 2px 0}
+  /* ---------- reveal on scroll ---------- */
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .9s cubic-bezier(.2,.6,.2,1),transform .9s cubic-bezier(.2,.6,.2,1)}
+  .reveal.in{opacity:1;transform:none}
 
-  /* layout */
-  .grid{display:grid;grid-template-columns:minmax(0,1fr) 392px;gap:14px;margin-top:14px;align-items:start}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
-  .card + .card{margin-top:14px}
-  .card h2{font-size:15px;font-weight:700;display:flex;align-items:center;gap:9px}
-  .card h2 .tag{margin-left:auto}
-  .card .sub{color:var(--muted);font-size:13px;margin-top:3px}
-  .tag{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line2);color:var(--muted);border-radius:999px;padding:3px 9px}
-  .tag.gold{color:var(--gold);border-color:var(--gold-dim)}
-  .tag.amber{color:var(--amber);border-color:#6b5322}
+  /* ---------- top bar ---------- */
+  .topbar{position:sticky;top:0;z-index:50;background:rgba(6,7,8,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .topbar-in{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:11px}
+  .glyph{width:34px;height:34px;border:1px solid var(--gold-dim);border-radius:8px;background:var(--inset);display:flex;align-items:center;justify-content:center;flex:none}
+  .brand .bt{font-weight:800;letter-spacing:-.02em;font-size:16.5px;line-height:1}
+  .brand .bs{color:var(--faint);font-size:11.5px;margin-top:2px}
+  .topmeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);border-radius:999px;padding:5px 12px;font-size:12px;color:var(--muted);font-weight:500;background:rgba(12,14,17,.6)}
+  .pill b{color:var(--text);font-weight:600}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+  .dot.live{background:var(--green);box-shadow:0 0 0 3px rgba(67,197,132,.16);animation:pulse 2.2s infinite}
+  .dot.snap{background:var(--amber);box-shadow:0 0 0 3px rgba(224,166,63,.14)}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(67,197,132,.35)}70%{box-shadow:0 0 0 7px rgba(67,197,132,0)}100%{box-shadow:0 0 0 0 rgba(67,197,132,0)}}
 
-  /* standings table */
-  table{width:100%;border-collapse:collapse;margin-top:14px}
-  th{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);text-align:right;padding:8px 10px;border-bottom:1px solid var(--line)}
-  th:first-child{text-align:left}
-  td{padding:13px 10px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono);font-size:13.5px;vertical-align:middle}
-  tr:last-child td{border-bottom:none}
-  td:first-child{text-align:left;font-family:var(--sans)}
-  tr.leader-row td{background:rgba(217,164,65,.05)}
-  tr.leader-row td:first-child{box-shadow:inset 3px 0 0 var(--gold)}
-  .clerk{display:flex;align-items:center;gap:11px}
-  .avatar{width:34px;height:34px;border-radius:9px;background:var(--panel2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none}
-  tr.leader-row .avatar{border-color:var(--gold-dim);color:var(--gold)}
-  .clerk .nm{font-weight:600;font-size:14.5px}
-  .clerk .pr{color:var(--faint);font-size:12px;font-family:var(--mono)}
-  .badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#14100a;background:var(--gold);border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px}
-  .status{font-family:var(--sans);font-size:12.5px;color:var(--muted)}
-  .status.elig{color:var(--green);font-weight:600}
-  .leader-note{margin-top:14px;border:1px solid var(--line);background:var(--inset);border-radius:10px;padding:13px 15px;font-size:13.5px;color:var(--muted)}
-  .leader-note b{color:var(--text)}
-  .leader-note .gold{color:var(--gold);font-weight:600}
+  /* ---------- hero ---------- */
+  .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+  .hero-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .hero-in{position:relative;padding:74px 0 58px}
+  .overline{font-family:var(--mono);font-size:12px;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .overline::before{content:"";width:34px;height:1px;background:var(--gold)}
+  .hero h1{font-size:clamp(76px,13.5vw,176px);font-weight:900;letter-spacing:-.045em;line-height:.88;margin-top:20px;text-transform:uppercase}
+  .hero h1 .it{color:var(--gold)}
+  .hero .lede{margin-top:22px;max-width:640px;font-size:clamp(16px,2vw,19.5px);color:var(--muted);line-height:1.55}
+  .hero .lede b{color:var(--text);font-weight:600}
+  .hero-market{display:flex;align-items:flex-end;gap:44px;flex-wrap:wrap;margin-top:46px}
+  .hm-price .k{font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .hm-price .v{font-family:var(--mono);font-weight:700;font-size:clamp(46px,6.5vw,76px);letter-spacing:-.03em;line-height:1.02;margin-top:4px}
+  .hm-price .v small{font-size:.38em;color:var(--muted);font-weight:500;letter-spacing:0}
+  .hm-side{display:flex;gap:34px;flex-wrap:wrap;padding-bottom:8px}
+  .hm-stat .k{font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--faint)}
+  .hm-stat .v{font-family:var(--mono);font-size:21px;font-weight:600;margin-top:3px}
+  .hm-stat .s{font-size:12px;color:var(--faint)}
 
-  /* activity */
-  .feed{margin-top:8px}
-  .evt{display:flex;gap:13px;padding:12px 0;border-bottom:1px solid var(--line)}
-  .evt:last-child{border-bottom:none;padding-bottom:2px}
-  .evt .ic{width:30px;height:30px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--line2);background:var(--inset);font-size:13px}
-  .evt.entry .ic{color:var(--blue);border-color:#2c4a6b}
-  .evt.exit .ic{color:var(--gold);border-color:var(--gold-dim)}
-  .evt.leadership .ic{color:#14100a;background:var(--gold);border-color:var(--gold)}
-  .evt.pass .ic{color:var(--faint)}
-  .evt .tt{font-weight:600;font-size:14px}
-  .evt .dd{color:var(--muted);font-size:13px;margin-top:1px}
-  .evt .tm{margin-left:auto;flex:none;text-align:right;font-family:var(--mono);font-size:11.5px;color:var(--faint);padding-top:3px}
-  .empty{color:var(--faint);font-size:13.5px;padding:14px 0 4px}
+  /* ---------- ticker ---------- */
+  .ticker{border-bottom:1px solid var(--line);background:var(--bg2);overflow:hidden;position:relative}
+  .ticker::before,.ticker::after{content:"";position:absolute;top:0;bottom:0;width:70px;z-index:2;pointer-events:none}
+  .ticker::before{left:0;background:linear-gradient(90deg,var(--bg2),transparent)}
+  .ticker::after{right:0;background:linear-gradient(-90deg,var(--bg2),transparent)}
+  .ticker-track{display:flex;width:max-content;animation:tickmove 55s linear infinite}
+  .ticker:hover .ticker-track{animation-play-state:paused}
+  @keyframes tickmove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .tk-group{display:flex;align-items:center}
+  .tk{display:inline-flex;align-items:center;gap:9px;padding:10px 0;font-family:var(--mono);font-size:12.5px;color:var(--muted);white-space:nowrap}
+  .tk i{font-style:normal;color:var(--gold);font-weight:600}
+  .tk b{color:var(--text);font-weight:600}
+  .tk .sep{margin:0 20px;color:var(--gold-dim)}
 
-  /* vault */
-  .kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
-  .kv:last-of-type{border-bottom:none}
-  .kv .kk{color:var(--muted)}
-  .kv .vv{font-family:var(--mono);font-weight:500;text-align:right}
-  .vault-note{font-size:13px;color:var(--muted);margin-top:12px}
-  .vault-note b{color:var(--text)}
+  /* ---------- sections ---------- */
+  section.block{padding:64px 0 8px}
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+  .sec-head h2{font-size:clamp(26px,3.6vw,40px);font-weight:800;letter-spacing:-.03em;line-height:1.05}
+  .sec-head h2 em{font-style:normal;color:var(--gold)}
+  .sec-head .note{color:var(--muted);font-size:13.5px;max-width:520px}
+  .sec-kicker{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+
+  /* ---------- chart ---------- */
+  .chart-wrap{position:relative;margin-top:18px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:
+    repeating-linear-gradient(0deg,transparent,transparent 63px,rgba(255,255,255,.014) 63px,rgba(255,255,255,.014) 64px)}
+  #chart{display:block;width:100%;height:440px;cursor:crosshair}
+  #chartTip{position:absolute;pointer-events:none;background:rgba(10,12,14,.94);border:1px solid var(--line2);border-radius:9px;padding:9px 12px;font-family:var(--mono);font-size:12px;line-height:1.65;color:var(--muted);opacity:0;transition:opacity .15s;z-index:5;min-width:178px}
+  #chartTip b{color:var(--text)}
+  #chartTip .tt-t{color:var(--gold);font-weight:600}
+  .chart-legend{display:flex;gap:22px;flex-wrap:wrap;margin-top:14px;font-size:12.5px;color:var(--muted)}
+  .chart-legend span{display:inline-flex;align-items:center;gap:8px}
+  .lg-line{width:22px;height:0;border-top:3px solid var(--gold);border-radius:2px}
+  .lg-dash{width:22px;height:0;border-top:2px dashed #9aa7ba}
+  .lg-zone{width:22px;height:10px;background:rgba(217,164,65,.13);border:1px solid rgba(217,164,65,.25)}
+  .chart-cap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px;font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+
+  /* ---------- spotlight ---------- */
+  .spotlight{margin-top:22px;border:1px solid var(--gold-dim);border-radius:18px;position:relative;overflow:hidden;background:radial-gradient(720px 300px at 18% 0%,rgba(217,164,65,.09),transparent 65%),var(--panel)}
+  .spotlight .ghost{position:absolute;right:-8px;top:50%;transform:translateY(-50%);font-size:clamp(90px,15vw,190px);font-weight:900;letter-spacing:-.04em;color:transparent;-webkit-text-stroke:1px rgba(217,164,65,.14);line-height:1;pointer-events:none;white-space:nowrap}
+  .spot-in{position:relative;padding:30px 32px}
+  .spot-k{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:9px}
+  .spot-in h3{font-size:clamp(28px,4.4vw,46px);font-weight:800;letter-spacing:-.03em;line-height:1.04;margin-top:12px;max-width:640px}
+  .spot-in p{color:var(--muted);font-size:14.5px;max-width:600px;margin-top:10px}
+  .meters{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:24px;max-width:820px}
+  .meter .mk{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .meter .mk b{color:var(--text);font-family:var(--mono);font-weight:600}
+  .meter .track{height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+  .meter .fill{height:100%;background:var(--gold);border-radius:3px;width:0;transition:width 1.2s cubic-bezier(.2,.6,.2,1)}
+
+  /* ---------- leaderboard ---------- */
+  .board{margin-top:26px;border-top:1px solid var(--line)}
+  .crow{display:grid;grid-template-columns:64px minmax(170px,1.15fr) 170px minmax(300px,2fr) 148px;gap:20px;align-items:center;padding:20px 14px;border-bottom:1px solid var(--line);transition:background .25s;position:relative}
+  .crow:hover{background:rgba(255,255,255,.022)}
+  .crow.is-leader{background:rgba(217,164,65,.045)}
+  .crow.is-leader::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold)}
+  .crank{font-size:40px;font-weight:900;letter-spacing:-.04em;color:transparent;-webkit-text-stroke:1.2px #3a4149;line-height:1}
+  .crow.is-leader .crank{-webkit-text-stroke-color:var(--gold)}
+  .cwho{display:flex;align-items:center;gap:13px;min-width:0}
+  .cava{width:44px;height:44px;border-radius:11px;background:var(--panel);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex:none}
+  .crow.is-leader .cava{border-color:var(--gold);color:var(--gold)}
+  .cname{font-weight:700;font-size:16.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .cbadge{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#14100a;background:var(--gold);border-radius:5px;padding:2px 7px}
+  .cmove{font-family:var(--mono);font-size:11px;font-weight:700}
+  .cparams{color:var(--faint);font-size:12px;font-family:var(--mono);margin-top:2px}
+  .cspark{min-width:0}
+  .cspark svg{display:block;width:100%;height:40px}
+  .cspark .sl{font-size:10.5px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+  .cnums{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .cnum label{display:block;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+  .cnum b{font-family:var(--mono);font-size:18px;font-weight:600;display:block;margin-top:2px;white-space:nowrap}
+  .cnum .openline{font-family:var(--mono);font-size:11.5px;color:var(--muted);display:block;margin-top:2px;white-space:normal}
+  .cstatus{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:500}
+  .cstatus .pulse{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+  .cstatus.hot{color:var(--gold-hi);font-weight:600}
+  .cstatus.hot .pulse{background:var(--gold);animation:pulse 2.2s infinite}
+  .cstatus.elig{color:var(--green);font-weight:600}
+  .cstatus.elig .pulse{background:var(--green)}
+
+  /* ---------- pool ---------- */
+  .poolbar{display:flex;height:86px;border-radius:14px;overflow:hidden;margin-top:22px;border:1px solid var(--line)}
+  .poolbar .seg{position:relative;display:flex;flex-direction:column;justify-content:center;padding:0 20px;min-width:0;transition:width 1.4s cubic-bezier(.2,.6,.2,1)}
+  .poolbar .seg.w{background:#20242a}
+  .poolbar .seg.u{background:#3a2c10}
+  .poolbar .seg .st{font-family:var(--mono);font-weight:700;font-size:19px;white-space:nowrap}
+  .poolbar .seg .sl2{font-size:11.5px;color:rgba(237,234,222,.62);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .poolbar .seg.u .sl2{color:rgba(238,194,106,.75)}
+  .strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin-top:26px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .strip .cell{padding:18px 16px;border-left:1px solid var(--line)}
+  .strip .cell:first-child{border-left:none;padding-left:2px}
+  .strip .k{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+  .strip .v{font-family:var(--mono);font-size:clamp(17px,1.9vw,23px);font-weight:600;margin-top:5px;white-space:nowrap}
+  .strip .s{font-size:11.5px;color:var(--faint);margin-top:2px}
+  .pool-note{color:var(--faint);font-size:12.5px;margin-top:12px;font-family:var(--mono)}
+
+  /* ---------- vault ---------- */
+  .vault-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:44px;margin-top:20px;align-items:start}
+  .vault-status{display:inline-flex;align-items:center;gap:9px;border:1px solid #6b5322;color:var(--amber);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;margin-top:14px}
+  .vault-status .pulse{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 2.2s infinite}
+  .vault-copy{color:var(--muted);font-size:14.5px;margin-top:16px;max-width:520px}
+  .vault-copy b{color:var(--text)}
+  .gauge-row{margin-bottom:22px}
+  .gauge-row .gk{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .gauge-row .gk .gl{font-size:13px;color:var(--muted);font-weight:500}
+  .gauge-row .gk .gv{font-family:var(--mono);font-size:19px;font-weight:700}
+  .gauge-row .gk .gv small{font-size:12px;color:var(--faint);font-weight:500}
+  .gauge-row .track{height:9px;border-radius:5px;background:var(--line);margin-top:8px;overflow:hidden}
+  .gauge-row .fill{height:100%;border-radius:5px;background:var(--gold);width:0;transition:width .9s cubic-bezier(.2,.6,.2,1)}
+  .gauge-row .gs{font-size:12px;color:var(--faint);margin-top:6px}
+  .vault-nums{display:flex;gap:36px;flex-wrap:wrap;margin-top:4px}
+  .vault-nums .vn .k{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+  .vault-nums .vn .v{font-family:var(--mono);font-size:26px;font-weight:700;margin-top:3px}
   .addr{font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all}
 
-  /* chat */
-  .chatlog{display:flex;flex-direction:column;gap:10px;margin-top:14px;max-height:380px;overflow-y:auto;padding-right:2px}
-  .msg{max-width:92%;padding:10px 13px;border-radius:12px;font-size:13.5px;line-height:1.55;white-space:pre-wrap}
+  /* ---------- ask the desk ---------- */
+  .ask-grid{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:44px;margin-top:20px;align-items:start}
+  .ask-left p{color:var(--muted);font-size:14.5px;max-width:460px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .chip{border:1px solid var(--line2);background:var(--inset);color:var(--muted);border-radius:999px;padding:8px 14px;font-size:13px;cursor:pointer;font-family:var(--sans);transition:all .18s}
+  .chip:hover{color:var(--text);border-color:var(--gold);transform:translateY(-1px)}
+  .chatbox{border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+  .chatlog{display:flex;flex-direction:column;gap:10px;max-height:430px;overflow-y:auto;padding:20px}
+  .msg{max-width:92%;padding:11px 14px;border-radius:13px;font-size:13.5px;line-height:1.6;white-space:pre-wrap}
   .msg.bot{background:var(--inset);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
-  .msg.user{background:var(--panel2);border:1px solid var(--line2);align-self:flex-end;border-bottom-right-radius:4px}
-  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
-  .chip{border:1px solid var(--line2);background:var(--inset);color:var(--muted);border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer;font-family:var(--sans);transition:all .15s}
-  .chip:hover{color:var(--text);border-color:var(--gold-dim)}
-  .chatin{display:flex;gap:8px;margin-top:12px}
-  .chatin input{flex:1;background:var(--inset);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:10px 13px;font-size:13.5px;font-family:var(--sans);outline:none}
+  .msg.user{background:#221a0c;border:1px solid var(--gold-dim);align-self:flex-end;border-bottom-right-radius:4px}
+  .chatin{display:flex;gap:8px;padding:14px;border-top:1px solid var(--line)}
+  .chatin input{flex:1;background:var(--inset);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:11px 14px;font-size:13.5px;font-family:var(--sans);outline:none;min-width:0}
   .chatin input:focus{border-color:var(--gold-dim)}
-  .chatin button{background:var(--gold);color:#14100a;border:none;border-radius:10px;padding:0 18px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:var(--sans)}
-  .chatin button:hover{background:#e5b556}
+  .chatin button{background:var(--gold);color:#14100a;border:none;border-radius:10px;padding:0 20px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:var(--sans);transition:background .15s}
+  .chatin button:hover{background:var(--gold-hi)}
 
-  /* explainer */
-  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
-  .step{background:var(--inset);border:1px solid var(--line);border-radius:12px;padding:16px}
-  .step .n{font-family:var(--mono);color:var(--gold);font-size:12px;font-weight:600}
-  .step h3{font-size:14px;font-weight:700;margin:7px 0 5px}
-  .step p{color:var(--muted);font-size:13px}
-  .freeze{margin-top:14px;font-size:13px;color:var(--faint)}
+  /* ---------- how it works ---------- */
+  .howrow{display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1.2fr);gap:26px;padding:26px 0;border-bottom:1px solid var(--line);align-items:baseline}
+  .howrow:first-of-type{border-top:1px solid var(--line);margin-top:22px}
+  .howrow .hn{font-size:52px;font-weight:900;letter-spacing:-.04em;color:transparent;-webkit-text-stroke:1.2px #3a4149;line-height:1}
+  .howrow h3{font-size:19px;font-weight:700;letter-spacing:-.01em}
+  .howrow p{color:var(--muted);font-size:14px}
+  .freeze{margin-top:22px;font-size:13px;color:var(--faint);max-width:860px}
   .freeze b{color:var(--muted)}
 
-  footer{margin-top:26px;border-top:1px solid var(--line);padding-top:18px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:var(--faint);font-size:12.5px}
+  footer{margin-top:70px;border-top:1px solid var(--line);padding:22px 0 34px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:var(--faint);font-size:12.5px}
 
-  @media (max-width:1020px){
-    .hero{grid-template-columns:repeat(2,1fr)}
-    .grid{grid-template-columns:1fr}
-    .steps{grid-template-columns:repeat(2,1fr)}
-    table{display:block;overflow-x:auto}
+  @media (max-width:1080px){
+    .crow{grid-template-columns:48px minmax(150px,1fr) 140px;grid-template-areas:"rank who spark" "rank nums nums" "rank status status";row-gap:12px}
+    .crank{grid-area:rank}.cwho{grid-area:who}.cspark{grid-area:spark}.cnums{grid-area:nums}.cstatus{grid-area:status}
+    .strip{grid-template-columns:repeat(3,1fr)}
+    .strip .cell{border-top:1px solid var(--line)}
+    .vault-grid,.ask-grid{grid-template-columns:1fr;gap:28px}
+    .meters{grid-template-columns:repeat(2,1fr)}
+    #chart{height:340px}
   }
-  @media (max-width:560px){ .steps{grid-template-columns:1fr} .stat .v{font-size:20px} }
+  @media (max-width:620px){
+    .wrap{padding:0 16px}
+    .hero-in{padding:48px 0 40px}
+    .meters{grid-template-columns:1fr 1fr;gap:12px}
+    .strip{grid-template-columns:repeat(2,1fr)}
+    .howrow{grid-template-columns:64px 1fr}
+    .howrow p{grid-column:2}
+    .howrow .hn{font-size:38px}
+    .poolbar{height:74px}
+    .poolbar .seg .st{font-size:15px}
+    #chart{height:290px}
+    .cnums{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+    .reveal{opacity:1;transform:none}
+    .ticker-track{animation:none}
+    html{scroll-behavior:auto}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <div class="topbar">
+<header class="topbar">
+  <div class="wrap topbar-in">
     <div class="brand">
       <div class="glyph" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z" stroke="#d9a441" stroke-width="1.6"/><path d="M4 18V5.5M8.5 7.5h7M8.5 11h7M8.5 14.5h4" stroke="#d9a441" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z" stroke="#d9a441" stroke-width="1.6"/><path d="M4 18V5.5M8.5 7.5h7M8.5 11h7M8.5 14.5h4" stroke="#d9a441" stroke-width="1.6" stroke-linecap="round"/></svg>
       </div>
       <div>
-        <h1>Clerk It</h1>
-        <p>A trading tournament with one rule: earn the right to trade.</p>
+        <div class="bt">Clerk It</div>
+        <div class="bs">Earn the right to trade</div>
       </div>
     </div>
     <div class="topmeta">
@@ -171,95 +256,139 @@
       <span class="pill">Venue <b>HSKSwap V3</b></span>
     </div>
   </div>
+</header>
 
-  <div class="hero">
-    <div class="stat"><div class="k">Spot price</div><div class="v" id="spotV">…</div><div class="s">USDT per WHSK, WHSK/USDT 0.3% pool</div></div>
-    <div class="stat"><div class="k">One hour TWAP anchor</div><div class="v" id="anchorV">…</div><div class="s">The pool's own history, no external oracle</div></div>
-    <div class="stat"><div class="k">Deviation</div><div class="v" id="devV">…</div><div class="s" id="devS">Spot versus the anchor, in basis points</div></div>
-    <div class="stat"><div class="k">Cost of a shadow fill</div><div class="v" id="gasV">…</div><div class="s">Real gas per fill, deducted from every clerk</div></div>
-  </div>
-
-  <div class="gauge-card">
-    <div class="gauge-head">
-      <h2>Deviation gauge</h2>
-      <p>Entry bands sit at ±75, ±125, ±200 and ±350 bps. A clerk may only open when the needle crosses its band.</p>
-    </div>
-    <div class="gauge" id="gauge">
-      <div class="track"></div><div class="zero"></div>
-      <div class="needle" id="needle" style="left:50%"></div>
-    </div>
-    <div class="gauge-scale"><span>−400 bps</span><span>−200</span><span>0</span><span>+200</span><span>+400 bps</span></div>
-  </div>
-
-  <div class="grid">
-    <div>
-      <div class="card">
-        <h2>Tournament standings <span class="tag" id="standingsTag">Shadow season</span></h2>
-        <p class="sub">Four clerks, one pool, frozen rules. Every fill is priced through the real QuoterV2 at 50 USDT with gas deducted. Standings update every five minutes.</p>
-        <table>
-          <thead><tr>
-            <th>Clerk</th><th>Band</th><th>Closed</th><th>Open position</th><th>Net P&amp;L</th><th>Equity</th><th>Worst DD</th><th>Status</th>
-          </tr></thead>
-          <tbody id="standingsBody"><tr><td colspan="8" class="empty">Loading the standings…</td></tr></tbody>
-        </table>
-        <div class="leader-note" id="leaderNote">Loading…</div>
+<section class="hero">
+  <canvas class="hero-fx" id="heroFx"></canvas>
+  <div class="wrap hero-in">
+    <div class="overline">HSK Chain Horizon · Track 1 · Live shadow tournament</div>
+    <h1>Clerk <span class="it">It.</span></h1>
+    <p class="lede">Four clerks paper trade the same HSKSwap pool under rules frozen before any data existed. <b>Only the clerk that earns promotion may trade live</b>, and only inside an on chain vault whose limits it cannot widen.</p>
+    <div class="hero-market">
+      <div class="hm-price">
+        <div class="k">WHSK · USDT per WHSK, live</div>
+        <div class="v"><span id="heroPrice">…</span> <small>USDT</small></div>
       </div>
-
-      <div class="card">
-        <h2>Recent activity <span class="tag" id="activityTag">Hash chained log</span></h2>
-        <p class="sub">Entries, exits and passes from the tournament log. Every record is hash chained to the one before it, so the history cannot be quietly rewritten.</p>
-        <div class="feed" id="feed"><p class="empty">Loading the log…</p></div>
+      <div class="hm-side">
+        <div class="hm-stat"><div class="k">1h TWAP anchor</div><div class="v" id="heroAnchor">…</div><div class="s">The pool's own history</div></div>
+        <div class="hm-stat"><div class="k">Deviation</div><div class="v" id="heroDev">…</div><div class="s" id="heroDevS">Spot versus the anchor</div></div>
+        <div class="hm-stat"><div class="k">Cost of a fill</div><div class="v" id="heroGas">…</div><div class="s">Real gas, deducted per fill</div></div>
       </div>
     </div>
+  </div>
+</section>
 
-    <div>
-      <div class="card">
-        <h2>ClerkVault <span class="tag amber">Pending funding</span></h2>
-        <p class="sub">The on chain leash for live trading. The contract is written; deployment waits on the project wallet being funded, and no live trade can happen before a clerk has earned leadership.</p>
-        <div style="margin-top:10px">
-          <div class="kv"><span class="kk">Deployment status</span><span class="vv" style="color:var(--amber)">Not deployed yet</span></div>
-          <div class="kv"><span class="kk">Live trade size</span><span class="vv">10 USDT</span></div>
-          <div class="kv"><span class="kk">Maximum trade size</span><span class="vv">25 USDT</span></div>
-          <div class="kv"><span class="kk">Daily loss cap</span><span class="vv">5 USDT</span></div>
-          <div class="kv"><span class="kk">Per trade cooldown</span><span class="vv">3,600 seconds</span></div>
-          <div class="kv"><span class="kk">Slippage guard</span><span class="vv">Fresh quote minimum out</span></div>
-          <div class="kv"><span class="kk">Who may trade</span><span class="vv">The leader, via the agent only</span></div>
-          <div class="kv"><span class="kk">Who may change limits</span><span class="vv">The owner only</span></div>
+<div class="ticker" aria-hidden="true"><div class="ticker-track" id="tickerTrack"></div></div>
+
+<main class="wrap">
+
+  <section class="block reveal" id="chartSec">
+    <div class="sec-kicker">The market</div>
+    <div class="sec-head">
+      <h2>One pool, watched <em>every five minutes</em></h2>
+      <p class="note">Spot against the pool's own one hour TWAP. The shaded field is the entry territory: a clerk may only open when price crosses its band.</p>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chart"></canvas>
+      <div id="chartTip"></div>
+    </div>
+    <div class="chart-legend">
+      <span><span class="lg-line"></span> Spot price</span>
+      <span><span class="lg-dash"></span> 1h TWAP anchor</span>
+      <span><span class="lg-zone"></span> Entry bands · A ±75 · B ±125 · C ±200 · D ±350 bps</span>
+    </div>
+    <div class="chart-cap"><span id="chartRange">Loading the price record…</span><span id="chartUpdated"></span></div>
+  </section>
+
+  <section class="block reveal" id="boardSec">
+    <div class="sec-kicker">The tournament</div>
+    <div class="sec-head">
+      <h2>Four clerks. <em>One chair.</em></h2>
+      <p class="note">Every fill is priced through the real QuoterV2 at 50 USDT with gas deducted. Standings are rewritten by the engine every five minutes.</p>
+    </div>
+    <div class="spotlight" id="spotlight"></div>
+    <div class="board" id="boardRows"></div>
+  </section>
+
+  <section class="block reveal" id="poolSec">
+    <div class="sec-kicker">The pool</div>
+    <div class="sec-head">
+      <h2>The whole market, <em>in one pool</em></h2>
+      <p class="note">A census of HSKSwap found exactly one deep pool among WHSK, USDT and USDC. This is its live composition.</p>
+    </div>
+    <div class="poolbar" id="poolBar">
+      <div class="seg w" id="segW" style="width:50%"><div class="st" id="segWT">WHSK</div><div class="sl2" id="segWS">…</div></div>
+      <div class="seg u" id="segU" style="width:50%"><div class="st" id="segUT">USDT</div><div class="sl2" id="segUS">…</div></div>
+    </div>
+    <div class="strip">
+      <div class="cell"><div class="k">Pool value</div><div class="v" id="poolTotal">…</div><div class="s">Both sides, at spot</div></div>
+      <div class="cell"><div class="k">WHSK in pool</div><div class="v" id="poolWhsk">…</div><div class="s">Wrapped HSK reserve</div></div>
+      <div class="cell"><div class="k">USDT in pool</div><div class="v" id="poolUsdt">…</div><div class="s">Stable reserve</div></div>
+      <div class="cell"><div class="k">Spot</div><div class="v" id="poolSpot">…</div><div class="s">USDT per WHSK</div></div>
+      <div class="cell"><div class="k">Deviation</div><div class="v" id="poolDev">…</div><div class="s">Versus the 1h anchor</div></div>
+      <div class="cell"><div class="k">Gas per fill</div><div class="v" id="poolGas">…</div><div class="s">Measured, not quoted</div></div>
+    </div>
+    <p class="pool-note" id="poolNote">Pool 0x4ff515761864e7838B0AdB8b5b2B8B7A068905dC · WHSK/USDT · 0.3% fee tier</p>
+  </section>
+
+  <section class="block reveal" id="vaultSec">
+    <div class="sec-kicker">The leash</div>
+    <div class="sec-head">
+      <h2>ClerkVault, <em>the on chain guardrail</em></h2>
+    </div>
+    <div class="vault-grid">
+      <div>
+        <div class="vault-status"><span class="pulse"></span><span>Not deployed yet · pending funding</span></div>
+        <p class="vault-copy">The contract is written and tested. Deployment waits on the project wallet being funded, and <b>no live trade can happen before a clerk has earned leadership</b>. When it deploys, these limits live in the contract, where the agent cannot reach them. The owner can pause the vault at any time; while paused, every trade reverts.</p>
+        <div class="vault-nums">
+          <div class="vn"><div class="k">Per trade cooldown</div><div class="v">3,600s</div></div>
+          <div class="vn"><div class="k">Slippage guard</div><div class="v" style="font-size:19px;padding-top:6px">Fresh quote min out</div></div>
         </div>
-        <p class="vault-note"><b>The agent cannot widen its own limits.</b> The vault holds them on chain. The owner can pause the vault at any time, and while paused every trade reverts.</p>
-        <p class="vault-note">Owner wallet<br><span class="addr">0x6D510373C8689E20706955395B89E5CdF38d3318</span></p>
+        <p class="vault-copy" style="margin-top:20px">Owner wallet<br><span class="addr">0x6D510373C8689E20706955395B89E5CdF38d3318</span></p>
       </div>
+      <div id="vaultGauges">
+        <div class="gauge-row"><div class="gk"><span class="gl">Live trade size</span><span class="gv">10 <small>USDT</small></span></div><div class="track"><div class="fill" data-w="40"></div></div><div class="gs">What the leader may actually trade, per trade</div></div>
+        <div class="gauge-row"><div class="gk"><span class="gl">Vault maximum trade</span><span class="gv">25 <small>USDT</small></span></div><div class="track"><div class="fill" data-w="100"></div></div><div class="gs">Hard cap in the contract. Headroom so a price move between quote and execution cannot push a valid trade over the limit</div></div>
+        <div class="gauge-row"><div class="gk"><span class="gl">Daily loss cap</span><span class="gv">5 <small>USDT</small></span></div><div class="track"><div class="fill" data-w="20"></div></div><div class="gs">Measured against a snapshot at the start of each UTC day. When the fall reaches the cap, trading halts</div></div>
+        <div class="gauge-row"><div class="gk"><span class="gl">Shadow trade size</span><span class="gv">50 <small>USDT</small></span></div><div class="track"><div class="fill" data-w="100" style="background:var(--line2)"></div></div><div class="gs">The paper size every clerk is scored at, against 500 USDT of marking capital</div></div>
+      </div>
+    </div>
+  </section>
 
-      <div class="card">
-        <h2>Ask the clerk desk <span class="tag gold">Live data</span></h2>
-        <p class="sub">Answers come from the live standings and the tournament log, quoted exactly. Nothing is invented: if there is nothing to report yet, it will say so.</p>
-        <div class="chatlog" id="chatlog"></div>
+  <section class="block reveal" id="askSec">
+    <div class="sec-kicker">The desk</div>
+    <div class="sec-head"><h2>Ask the <em>clerk desk</em></h2></div>
+    <div class="ask-grid">
+      <div class="ask-left">
+        <p>Answers come from the live standings and the hash chained tournament log, quoted exactly. Nothing is invented: if there is nothing to report yet, the desk will say so, plainly.</p>
         <div class="chips" id="chips"></div>
+      </div>
+      <div class="chatbox">
+        <div class="chatlog" id="chatlog"></div>
         <form class="chatin" id="chatform">
           <input id="chatinput" type="text" placeholder="Ask about positions, P and L, risk…" autocomplete="off">
           <button type="submit">Ask</button>
         </form>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="card" style="margin-top:14px">
-    <h2>How the tournament works</h2>
-    <p class="sub">Clerk It began as an arbitrage idea. A census of HSKSwap found exactly one deep pool, so there was no second leg to arbitrage against. The tournament is the honest answer to that fact: prove a strategy in public, on this pool, before a single real unit moves.</p>
-    <div class="steps">
-      <div class="step"><div class="n">01</div><h3>Four clerks, one pool</h3><p>Clerks A to D watch the same WHSK/USDT pool with different mean reversion bands, from Tight at 75 bps to Fat Tail at 350 bps. All trade on paper at the same time, so conditions are identical.</p></div>
-      <div class="step"><div class="n">02</div><h3>No free fills</h3><p>Every shadow entry and exit is priced through the real QuoterV2 at the full 50 USDT size, so the 0.3% pool fee and real price impact are inside every fill. Gas is deducted per fill at the live gas price.</p></div>
-      <div class="step"><div class="n">03</div><h3>Promotion must be earned</h3><p>A clerk becomes eligible only with at least 5 closed trades and a positive net P and L after costs. The eligible clerk with the highest net P and L leads. No eligible clerk means no leader, and no live trades. Silence is a valid state.</p></div>
-      <div class="step"><div class="n">04</div><h3>Live, on a leash</h3><p>Only the leader may trade live, only through ClerkVault, only at 10 USDT a trade. The vault enforces a 25 USDT maximum, a 5 USDT daily loss cap and a one hour cooldown, and the owner can pause it at any time.</p></div>
-    </div>
+  <section class="block reveal" id="howSec">
+    <div class="sec-kicker">The story</div>
+    <div class="sec-head"><h2>How the tournament <em>works</em></h2></div>
+    <p style="color:var(--muted);max-width:760px;margin-top:6px">Clerk It began as an arbitrage idea. A census of HSKSwap found exactly one deep pool, so there was no second leg to arbitrage against. The tournament is the honest answer to that fact: prove a strategy in public, on this pool, before a single real unit moves.</p>
+    <div class="howrow"><div class="hn">01</div><h3>Four clerks, one pool</h3><p>Clerks A to D watch the same WHSK/USDT pool with different mean reversion bands, from Tight at 75 bps to Fat Tail at 350 bps. All trade on paper at the same time, so conditions are identical and the comparison is fair.</p></div>
+    <div class="howrow"><div class="hn">02</div><h3>No free fills</h3><p>Every shadow entry and exit is priced through the real QuoterV2 at the full 50 USDT size, so the 0.3% pool fee and real price impact sit inside every fill. Gas is deducted per fill at the live gas price. A round trip costs roughly 62 bps before any price move, which is why the tightest band sits at 75.</p></div>
+    <div class="howrow"><div class="hn">03</div><h3>Promotion must be earned</h3><p>A clerk becomes eligible only with at least 5 closed trades and a positive net P and L after costs. The eligible clerk with the highest net P and L leads; ties break on more closes, then roster order. No eligible clerk means no leader and no live trades. Silence is a valid state.</p></div>
+    <div class="howrow"><div class="hn">04</div><h3>Live, on a leash</h3><p>Only the leader may trade live, only through ClerkVault, only at 10 USDT a trade. The vault enforces a 25 USDT maximum, a 5 USDT daily loss cap and a one hour cooldown on chain, and the owner can pause it at any time.</p></div>
     <p class="freeze"><b>Frozen rules.</b> The anchor window, roster, fill model, scoring, promotion rule and vault limits were frozen on 24 November 2026, before the engine collected any data, and are pinned by a SHA 256 hash in the design record. Any change starts a new tournament from zero; nothing is ever tuned on this tournament's own data and presented as its result.</p>
-  </div>
+  </section>
 
   <footer>
     <span>Clerk It · HSK Chain Horizon, Track 1 (AI Agent Trading) · Built by Godson</span>
     <span><a href="https://hsk.blockscout.com/address/0x4ff515761864e7838B0AdB8b5b2B8B7A068905dC" target="_blank" rel="noopener">The pool on Blockscout</a> · <a href="https://github.com/Godson-droid/clerk-it" target="_blank" rel="noopener">Source and data</a></span>
   </footer>
-</div>
+</main>
 
 <script>
 "use strict";
@@ -267,13 +396,18 @@ const RPC = "https://mainnet.hsk.xyz";
 const POOL = "0x4ff515761864e7838B0AdB8b5b2B8B7A068905dC";
 const SLOT0 = "0x3850c7bd", OBSERVE = "0x883bdbfd";
 const CLERK_ORDER = ["A","B","C","D"];
-let S = null, A = null;
+const BANDS = [75,125,200,350];
+const RM = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let S = null, A = null, H = null;
 let P = null; // pool state {spot, anchor, deviation_bps, block, live}
+let series = []; // chart points {t, spot, anchor}
+const shown = {}; // currently displayed numeric values, for tweening
 
 const $ = id => document.getElementById(id);
 const fmt = (v, d=4) => (v==null||isNaN(v)) ? "…" : Number(v).toLocaleString("en-US",{minimumFractionDigits:d, maximumFractionDigits:d});
 const fmtSigned = (v, d=4) => (v>0?"+":"") + fmt(v, d);
 const fmtBps = v => (v>0?"+":"") + fmt(v, 1);
+const fmtInt = v => (v==null||isNaN(v)) ? "…" : Math.round(Number(v)).toLocaleString("en-US");
 function relTime(ts){
   const t = new Date(ts).getTime(); if (isNaN(t)) return "";
   const s = Math.max(0, (Date.now()-t)/1000);
@@ -292,23 +426,23 @@ function ageText(sec){
   if (sec < 86400) return Math.floor(sec/3600) + "h " + Math.round((sec%3600)/60) + "m";
   return Math.floor(sec/86400) + "d " + Math.floor((sec%86400)/3600) + "h";
 }
+/* tween a numeric display toward a target; jumps instantly under reduced motion */
+function tween(el, key, to, formatter, dur, fromZero){
+  if (!el || to == null || isNaN(to)) return;
+  const from = (key in shown) ? shown[key] : (fromZero ? 0 : to);
+  shown[key] = to;
+  if (RM || from === to) { el.textContent = formatter(to); return; }
+  const t0 = performance.now(), D = dur || 700;
+  (function step(t){
+    const k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = formatter(from + (to - from) * e);
+    if (k < 1 && shown[key] === to) requestAnimationFrame(step);
+  })(t0);
+  /* if rAF is throttled (background tab), still land on the true value */
+  setTimeout(() => { if (shown[key] === to && el.isConnected) el.textContent = formatter(to); }, D + 200);
+}
 
-/* ---------- gauge bands ---------- */
-(function buildGauge(){
-  const g = $("gauge");
-  [75,125,200,350].forEach(b=>{
-    [-1,1].forEach(sign=>{
-      const el = document.createElement("div");
-      el.className = "band";
-      el.style.left = `calc(${50 + sign*b/8}% )`;
-      el.style.transform = "translateX(-50%)";
-      if (sign > 0) el.innerHTML = `<span>${b}</span>`;
-      g.appendChild(el);
-    });
-  });
-})();
-
-/* ---------- live pool read ---------- */
+/* ---------- live pool read (same math as the engine) ---------- */
 let rpcId = 0;
 async function rpcCall(method, params){
   const r = await fetch(RPC, {method:"POST", headers:{"Content-Type":"application/json"},
@@ -318,9 +452,7 @@ async function rpcCall(method, params){
   return j.result;
 }
 const pad32 = n => BigInt(n).toString(16).padStart(64, "0");
-function wordAt(hex, i){
-  return BigInt("0x" + hex.slice(2 + i*64, 2 + (i+1)*64));
-}
+function wordAt(hex, i){ return BigInt("0x" + hex.slice(2 + i*64, 2 + (i+1)*64)); }
 function signedWord(hex, i){
   const v = wordAt(hex, i);
   return v >= (1n<<255n) ? v - (1n<<256n) : v;
@@ -340,6 +472,11 @@ async function refreshPool(){
     if (diff % 3600n !== 0n && diff < 0n) tick -= 1n;
     const anchor = Math.pow(1.0001, Number(tick)) * 1e12;
     P = {spot, anchor, deviation_bps: (spot/anchor - 1) * 10000, block: parseInt(blockHex, 16), live: true};
+    const last = series[series.length - 1];
+    if (!last || Date.now() - last.t > 20000) {
+      series.push({t: Date.now(), spot, anchor});
+      drawChart(false);
+    }
   } catch(e) {
     if (S) P = {spot: S.spot_usdt_per_whsk, anchor: S.anchor_usdt_per_whsk,
                 deviation_bps: S.deviation_bps, block: S.block, live: false};
@@ -348,94 +485,354 @@ async function refreshPool(){
 }
 function renderPool(){
   if (!P) return;
-  $("spotV").textContent = fmt(P.spot, 6);
-  $("anchorV").textContent = fmt(P.anchor, 6);
-  const dev = $("devV");
-  dev.textContent = fmtBps(P.deviation_bps) + " bps";
-  dev.className = "v " + (Math.abs(P.deviation_bps) < 75 ? "" : (P.deviation_bps > 0 ? "neg" : "pos"));
-  $("devS").textContent = Math.abs(P.deviation_bps) < 75
+  tween($("heroPrice"), "spot", P.spot, v => fmt(v, 6));
+  tween($("heroAnchor"), "anchor", P.anchor, v => fmt(v, 6));
+  const devEl = $("heroDev");
+  tween(devEl, "dev", P.deviation_bps, v => fmtBps(v) + " bps");
+  devEl.style.color = Math.abs(P.deviation_bps) < 75 ? "" : (P.deviation_bps > 0 ? "var(--red)" : "var(--green)");
+  $("heroDevS").textContent = Math.abs(P.deviation_bps) < 75
     ? "Inside every entry band; no clerk may open here"
     : "Outside at least one entry band";
-  if (S) $("gasV").textContent = fmt(S.gas_per_fill_usdt, 4) + " USDT";
-  const pct = Math.max(0, Math.min(100, 50 + P.deviation_bps/8));
-  $("needle").style.left = pct + "%";
+  if (S) {
+    $("heroGas").textContent = fmt(S.gas_per_fill_usdt, 4) + " USDT";
+    $("poolGas").textContent = fmt(S.gas_per_fill_usdt, 4);
+  }
+  $("poolSpot").textContent = fmt(P.spot, 6);
+  const pd = $("poolDev");
+  pd.textContent = fmtBps(P.deviation_bps) + " bps";
+  pd.style.color = Math.abs(P.deviation_bps) < 75 ? "" : (P.deviation_bps > 0 ? "var(--red)" : "var(--green)");
   const dot = $("feedDot"), label = $("feedLabel");
   if (P.live) { dot.className = "dot live"; label.innerHTML = "Live pool feed · block <b>" + P.block.toLocaleString() + "</b>"; }
   else { dot.className = "dot snap"; label.innerHTML = "Engine snapshot · block <b>" + (P.block||0).toLocaleString() + "</b>"; }
 }
 
-/* ---------- standings + activity ---------- */
+/* ---------- hero canvas: the real price record as a backdrop ---------- */
+const heroFx = $("heroFx"), hfx = heroFx.getContext("2d");
+let heroPhase = 0, heroRunning = false;
+function startHeroFx(){ if (!heroRunning) { heroRunning = true; drawHeroFx(); } }
+function drawHeroFx(){
+  const hero = heroFx.parentElement;
+  const w = hero.clientWidth, h = hero.clientHeight;
+  if (heroFx.width !== w || heroFx.height !== h) { heroFx.width = w; heroFx.height = h; }
+  hfx.clearRect(0, 0, w, h);
+  // faint dot grid
+  hfx.fillStyle = "rgba(237,234,222,0.05)";
+  for (let x = 26; x < w; x += 46) for (let y = 22; y < h; y += 46) hfx.fillRect(x, y, 1.6, 1.6);
+  if (series.length > 1) {
+    const spots = series.map(p => p.spot);
+    let mn = Math.min(...spots), mx = Math.max(...spots);
+    if (mx - mn < 1e-9) { const m = (mx + mn) / 2; mn = m * 0.999; mx = m * 1.001; }
+    const X = i => (i / (series.length - 1)) * (w + 160) - 80;
+    const Y = v => h * 0.16 + (1 - (v - mn) / (mx - mn)) * h * 0.62;
+    hfx.beginPath();
+    series.forEach((p, i) => i ? hfx.lineTo(X(i), Y(p.spot)) : hfx.moveTo(X(i), Y(p.spot)));
+    hfx.strokeStyle = "rgba(217,164,65,0.20)"; hfx.lineWidth = 1.6; hfx.stroke();
+    hfx.lineTo(X(series.length - 1), h); hfx.lineTo(X(0), h); hfx.closePath();
+    const fg = hfx.createLinearGradient(0, h * 0.2, 0, h);
+    fg.addColorStop(0, "rgba(217,164,65,0.05)"); fg.addColorStop(0.55, "rgba(217,164,65,0.012)"); fg.addColorStop(1, "rgba(217,164,65,0)");
+    hfx.fillStyle = fg; hfx.fill();
+    // a pulse of light travelling the line
+    const n = series.length - 1, pos = (heroPhase % 1) * n, i0 = Math.floor(pos), fr = pos - i0;
+    const px = X(i0) + (X(Math.min(n, i0 + 1)) - X(i0)) * fr;
+    const py = Y(series[i0].spot + (series[Math.min(n, i0 + 1)].spot - series[i0].spot) * fr);
+    const g = hfx.createRadialGradient(px, py, 0, px, py, 26);
+    g.addColorStop(0, "rgba(238,194,106,0.55)"); g.addColorStop(1, "rgba(238,194,106,0)");
+    hfx.fillStyle = g; hfx.beginPath(); hfx.arc(px, py, 26, 0, 7); hfx.fill();
+    hfx.fillStyle = "rgba(238,194,106,0.9)"; hfx.beginPath(); hfx.arc(px, py, 2.4, 0, 7); hfx.fill();
+  }
+  heroPhase += 0.0016;
+  if (!RM) requestAnimationFrame(drawHeroFx);
+}
+
+/* ---------- ticker ---------- */
+function buildTicker(){
+  const items = [];
+  if (A && A.items) A.items.slice(0, 10).forEach(it => items.push({t: it.ts, main: it.title, sub: it.detail}));
+  if (A && A.last_cycle) items.push({t: A.last_cycle.ts, main: "Engine cycle", sub: `deviation ${fmtBps(A.last_cycle.deviation_bps)} bps · block ${Number(A.last_cycle.block).toLocaleString()}`});
+  if (S) items.push({t: S.ts, main: "Standings", sub: `leader ${S.leader ? "Clerk " + S.leader.clerk : "none yet"} · all fills priced through the real quoter`});
+  if (!items.length) items.push({t: null, main: "Clerk It", sub: "the tournament log is warming up"});
+  const html = items.map(it =>
+    `<span class="tk">${it.t ? `<i>${clockTime(it.t)}</i>` : ""}<b>${it.main}</b><span>${it.sub}</span><span class="sep">◆</span></span>`).join("");
+  $("tickerTrack").innerHTML = `<div class="tk-group">${html}</div><div class="tk-group">${html}</div>`;
+}
+
+/* ---------- the big chart ---------- */
+const chart = $("chart"), cx = chart.getContext("2d");
+const tip = $("chartTip");
+let chartAnim = RM ? 1 : 0, chartAnimT0 = 0, hoverIdx = -1, chartGeom = null;
+function sizeChart(){
+  const dpr = window.devicePixelRatio || 1;
+  const w = chart.clientWidth, h = chart.clientHeight;
+  chart.width = Math.round(w * dpr); chart.height = Math.round(h * dpr);
+  cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+function drawChart(animate){
+  if (!series.length) return;
+  sizeChart();
+  const W = chart.clientWidth, Hh = chart.clientHeight;
+  const padL = 6, padR = 86, padT = 16, padB = 28;
+  const iw = W - padL - padR, ih = Hh - padT - padB;
+  const anchors = series.map(p => p.anchor || p.spot);
+  const aMin = Math.min(...anchors), aMax = Math.max(...anchors);
+  let lo = aMin * (1 - 0.040), hi = aMax * (1 + 0.040);
+  series.forEach(p => { lo = Math.min(lo, p.spot); hi = Math.max(hi, p.spot); });
+  const X = i => padL + (series.length === 1 ? iw / 2 : (i / (series.length - 1)) * iw);
+  const Y = v => padT + (1 - (v - lo) / (hi - lo)) * ih;
+  chartGeom = {X, Y, padL, padT, iw, ih, lo, hi};
+  cx.clearRect(0, 0, W, Hh);
+  // y gridlines + price labels
+  cx.font = "10.5px 'JetBrains Mono', monospace"; cx.textBaseline = "middle";
+  for (let g = 0; g <= 4; g++) {
+    const v = lo + (hi - lo) * g / 4, y = Y(v);
+    cx.strokeStyle = "rgba(255,255,255,0.05)"; cx.lineWidth = 1;
+    cx.beginPath(); cx.moveTo(padL, y); cx.lineTo(padL + iw, y); cx.stroke();
+    cx.fillStyle = "#5f6771"; cx.textAlign = "left";
+    cx.fillText(fmt(v, 5), padL + 4, Math.max(9, y - 8));
+  }
+  const lastA = anchors[anchors.length - 1];
+  // band zones and edges, relative to the anchor at each x
+  const zone = (b, alpha) => {
+    cx.beginPath();
+    series.forEach((p, i) => { const a = p.anchor || p.spot, y = Y(a * (1 + b / 10000)); i ? cx.lineTo(X(i), y) : cx.moveTo(X(i), y); });
+    for (let i = series.length - 1; i >= 0; i--) { const a = series[i].anchor || series[i].spot; cx.lineTo(X(i), Y(a * (1 - b / 10000))); }
+    cx.closePath(); cx.fillStyle = `rgba(217,164,65,${alpha})`; cx.fill();
+  };
+  zone(350, 0.016);
+  BANDS.forEach((b, bi) => {
+    [1, -1].forEach(sgn => {
+      cx.beginPath();
+      series.forEach((p, i) => { const a = p.anchor || p.spot, y = Y(a * (1 + sgn * b / 10000)); i ? cx.lineTo(X(i), y) : cx.moveTo(X(i), y); });
+      cx.strokeStyle = "rgba(217,164,65,0.30)"; cx.lineWidth = 1;
+      cx.setLineDash(bi % 2 ? [3, 4] : []); cx.stroke(); cx.setLineDash([]);
+    });
+    cx.fillStyle = "rgba(217,164,65,0.55)"; cx.textAlign = "left";
+    cx.fillText(`${CLERK_ORDER[bi]} ±${b}`, padL + iw + 10, Y(lastA * (1 + b / 10000)));
+  });
+  // reveal clip for the draw-in animation
+  cx.save();
+  cx.beginPath(); cx.rect(0, 0, padL + iw * chartAnim + 4, Hh); cx.clip();
+  // anchor line
+  cx.beginPath();
+  series.forEach((p, i) => { const y = Y(p.anchor || p.spot); i ? cx.lineTo(X(i), y) : cx.moveTo(X(i), y); });
+  cx.strokeStyle = "rgba(154,167,186,0.85)"; cx.lineWidth = 1.5; cx.setLineDash([6, 5]); cx.stroke(); cx.setLineDash([]);
+  // spot area + line
+  if (series.length > 1) {
+    cx.beginPath();
+    series.forEach((p, i) => i ? cx.lineTo(X(i), Y(p.spot)) : cx.moveTo(X(i), Y(p.spot)));
+    cx.lineTo(X(series.length - 1), padT + ih); cx.lineTo(X(0), padT + ih); cx.closePath();
+    const gr = cx.createLinearGradient(0, padT, 0, padT + ih);
+    gr.addColorStop(0, "rgba(217,164,65,0.08)"); gr.addColorStop(1, "rgba(217,164,65,0)");
+    cx.fillStyle = gr; cx.fill();
+  }
+  cx.beginPath();
+  series.forEach((p, i) => i ? cx.lineTo(X(i), Y(p.spot)) : cx.moveTo(X(i), Y(p.spot)));
+  cx.strokeStyle = "#eec26a"; cx.lineWidth = 2.4; cx.lineJoin = "round";
+  cx.shadowColor = "rgba(217,164,65,0.45)"; cx.shadowBlur = 9; cx.stroke(); cx.shadowBlur = 0;
+  cx.restore();
+  // head dot with pulse
+  const li = series.length - 1, hx = X(li), hy = Y(series[li].spot);
+  if (chartAnim >= 1) {
+    const r = RM ? 4 : 4 + Math.sin(Date.now() / 380) * 1.3;
+    cx.fillStyle = "rgba(238,194,106,0.25)"; cx.beginPath(); cx.arc(hx, hy, r + 5, 0, 7); cx.fill();
+    cx.fillStyle = "#eec26a"; cx.beginPath(); cx.arc(hx, hy, 3.6, 0, 7); cx.fill();
+  }
+  // x labels
+  cx.fillStyle = "#5f6771"; cx.textAlign = "center";
+  [0, Math.floor((series.length - 1) / 2), series.length - 1].forEach(i => {
+    if (series[i]) cx.fillText(clockTime(new Date(series[i].t).toISOString()).replace(" UTC", ""), X(i), Hh - 12);
+  });
+  // crosshair
+  if (hoverIdx >= 0 && series[hoverIdx]) {
+    const p = series[hoverIdx], x = X(hoverIdx);
+    cx.strokeStyle = "rgba(237,234,222,0.28)"; cx.lineWidth = 1;
+    cx.beginPath(); cx.moveTo(x, padT); cx.lineTo(x, padT + ih); cx.stroke();
+    cx.fillStyle = "#eec26a"; cx.beginPath(); cx.arc(x, Y(p.spot), 4.4, 0, 7); cx.fill();
+    cx.fillStyle = "#9aa7ba"; cx.beginPath(); cx.arc(x, Y(p.anchor || p.spot), 3.4, 0, 7); cx.fill();
+  }
+  if (animate && chartAnim < 1) {
+    if (!chartAnimT0) chartAnimT0 = performance.now();
+    chartAnim = Math.min(1, (performance.now() - chartAnimT0) / 1100);
+    if (chartAnim < 1) requestAnimationFrame(() => drawChart(true));
+    else chartAnimT0 = 0;
+  } else if (!RM) {
+    requestAnimationFrame(() => { if (chartAnim >= 1) drawChart(false); });
+  }
+}
+chart.addEventListener("pointermove", e => {
+  if (!chartGeom || series.length < 2) return;
+  const rect = chart.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const {padL, iw} = chartGeom;
+  const frac = Math.max(0, Math.min(1, (mx - padL) / iw));
+  hoverIdx = Math.round(frac * (series.length - 1));
+  const p = series[hoverIdx];
+  const dev = p.anchor ? (p.spot / p.anchor - 1) * 10000 : null;
+  tip.innerHTML = `<span class="tt-t">${clockTime(new Date(p.t).toISOString())}</span><br>` +
+    `Spot <b>${fmt(p.spot, 6)}</b><br>` +
+    (p.anchor ? `Anchor <b>${fmt(p.anchor, 6)}</b><br>Deviation <b>${fmtBps(dev)} bps</b>` : `Anchor <b>not recorded</b>`);
+  tip.style.opacity = "1";
+  const tx = Math.min(rect.width - 196, Math.max(6, mx + 16));
+  tip.style.left = tx + "px";
+  tip.style.top = Math.max(6, e.clientY - rect.top - 20) + "px";
+  drawChart(false);
+});
+chart.addEventListener("pointerleave", () => { hoverIdx = -1; tip.style.opacity = "0"; drawChart(false); });
+window.addEventListener("resize", () => { drawChart(false); startHeroFx(); });
+
+/* ---------- data loading ---------- */
 async function loadData(){
   try {
-    const [sr, ar] = await Promise.all([
-      fetch("standings.json", {cache:"no-store"}), fetch("activity.json", {cache:"no-store"})
+    const [sr, ar, hr] = await Promise.all([
+      fetch("standings.json", {cache:"no-store"}),
+      fetch("activity.json", {cache:"no-store"}),
+      fetch("history.json", {cache:"no-store"})
     ]);
     S = await sr.json(); A = await ar.json();
-    renderStandings(); renderFeed();
+    try { H = await hr.json(); } catch(e) { H = null; }
+    if (H && H.prices && H.prices.length) {
+      series = H.prices.map(p => ({t: new Date(p.ts).getTime(), spot: p.spot, anchor: p.anchor || p.spot}));
+      chartAnim = RM ? 1 : 0; chartAnimT0 = 0;
+      drawChart(true);
+      /* if rAF is throttled, the chart must still reach its final state */
+      setTimeout(() => { if (chartAnim < 1) { chartAnim = 1; chartAnimT0 = 0; drawChart(false); } }, 2000);
+      const f = H.prices[0], l = H.prices[H.prices.length - 1];
+      $("chartRange").textContent = `${H.prices.length} recorded points · ${clockTime(f.ts)} → ${clockTime(l.ts)} · recording since 24 Nov 2026`;
+    }
+    $("chartUpdated").textContent = "Standings " + relTime(S.ts) + " · block " + Number(S.block).toLocaleString();
+    buildTicker();
+    renderSpotlight();
+    renderBoard();
+    renderPoolVisual();
     if (!P) refreshPool(); else renderPool();
   } catch(e) { /* keep last good render */ }
 }
-function renderStandings(){
+
+/* ---------- spotlight ---------- */
+function renderSpotlight(){
   if (!S) return;
-  const body = $("standingsBody");
-  body.innerHTML = "";
+  const el = $("spotlight");
+  if (S.leader) {
+    const c = S.clerks[S.leader.clerk];
+    el.innerHTML = `<div class="ghost">${S.leader.clerk}</div><div class="spot-in">
+      <div class="spot-k"><span class="dot live"></span> The chair is taken</div>
+      <h3>Clerk ${S.leader.clerk} · ${c.name} leads the desk</h3>
+      <p>${S.leader.reason}. Only this clerk may place live trades, at 10 USDT each, and only through ClerkVault once it is deployed.</p>
+      <div class="meters">${CLERK_ORDER.map(cid => meterHtml(cid)).join("")}</div>
+    </div>`;
+  } else {
+    el.innerHTML = `<div class="ghost">0 / 5</div><div class="spot-in">
+      <div class="spot-k"><span class="dot snap" style="background:var(--amber)"></span> The chair is empty</div>
+      <h3>No leader yet. The desk is waiting, on the record.</h3>
+      <p>Promotion is a rule, not a vote: at least 5 closed shadow trades and a positive net P and L after real pool fees and gas. Until a clerk earns it, the live executor stays silent. The meters below are the whole story, updated every five minutes.</p>
+      <div class="meters">${CLERK_ORDER.map(cid => meterHtml(cid)).join("")}</div>
+    </div>`;
+  }
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    el.querySelectorAll(".meter .fill").forEach(f => { f.style.width = f.dataset.w + "%"; });
+  }));
+}
+function meterHtml(cid){
+  const c = S.clerks[cid];
+  const pct = Math.min(100, c.closed_trades / 5 * 100);
+  return `<div class="meter"><div class="mk"><span>Clerk ${cid} · ${c.name}</span><b>${c.closed_trades} / 5 closes</b></div><div class="track"><div class="fill" data-w="${pct}"></div></div></div>`;
+}
+
+/* ---------- leaderboard ---------- */
+let prevRank = {};
+function sparkSvg(cid){
+  const pts = (H && H.equity && H.equity[cid]) || [];
+  if (pts.length < 2) return `<svg viewBox="0 0 160 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="160" y2="20" stroke="#3a4149" stroke-width="1.5" stroke-dasharray="4 4"/></svg>`;
+  const vals = pts.map(p => p.equity);
+  let mn = Math.min(...vals), mx = Math.max(...vals);
+  if (mx - mn < 1e-9) return `<svg viewBox="0 0 160 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="160" y2="20" stroke="#3a4149" stroke-width="1.5" stroke-dasharray="4 4"/></svg>`;
+  const X = i => (i / (pts.length - 1)) * 160, Y = v => 34 - (v - mn) / (mx - mn) * 28;
+  const line = pts.map((p, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(p.equity).toFixed(1)}`).join(" ");
+  const up = vals[vals.length - 1] >= vals[0];
+  const col = up ? "#d9a441" : "#e0655f";
+  return `<svg viewBox="0 0 160 40" preserveAspectRatio="none"><path d="${line} L160,40 L0,40 Z" fill="${col}" opacity="0.10" stroke="none"/><path d="${line}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
+}
+function renderBoard(){
+  if (!S) return;
   const leaderId = S.leader ? S.leader.clerk : null;
-  CLERK_ORDER.forEach(cid => {
-    const c = S.clerks[cid]; if (!c) return;
-    const tr = document.createElement("tr");
-    if (cid === leaderId) tr.className = "leader-row";
+  const ranked = [...CLERK_ORDER].sort((a, b) => {
+    const ca = S.clerks[a], cb = S.clerks[b];
+    if (cb.net_pnl_usdt !== ca.net_pnl_usdt) return cb.net_pnl_usdt - ca.net_pnl_usdt;
+    if (cb.closed_trades !== ca.closed_trades) return cb.closed_trades - ca.closed_trades;
+    return CLERK_ORDER.indexOf(a) - CLERK_ORDER.indexOf(b);
+  });
+  const board = $("boardRows");
+  board.innerHTML = "";
+  ranked.forEach((cid, idx) => {
+    const c = S.clerks[cid];
+    const rank = idx + 1;
+    let move = "";
+    if (prevRank[cid] != null && prevRank[cid] !== rank) {
+      const d = prevRank[cid] - rank;
+      move = `<span class="cmove" style="color:${d > 0 ? "var(--green)" : "var(--red)"}">${d > 0 ? "▲" : "▼"} ${Math.abs(d)}</span>`;
+    }
+    prevRank[cid] = rank;
+    const row = document.createElement("div");
+    row.className = "crow" + (cid === leaderId ? " is-leader" : "");
     const pos = c.open_position;
     const posHtml = pos
-      ? `<span class="${pos.direction === "long" ? "pos" : "neg"}">${pos.direction.toUpperCase()}</span> ${fmt(pos.whsk_amount, 2)} WHSK<br><span style="color:var(--faint);font-size:12px">@ ${fmt(pos.entry_price, 6)} · ${ageText(pos.age_s)} · ${fmtSigned(pos.unrealised_pnl_usdt)} USDT</span>`
-      : `<span style="color:var(--faint)">Flat</span>`;
-    let status, statusCls = "status";
-    if (cid === leaderId) { status = "Leading"; statusCls += " elig"; }
-    else if (c.eligible) status = "Eligible";
+      ? `<span class="openline"><span class="${pos.direction === "long" ? "pos" : "neg"}">${pos.direction.toUpperCase()}</span> ${fmt(pos.whsk_amount, 2)} WHSK @ ${fmt(pos.entry_price, 6)} · ${ageText(pos.age_s)} · ${fmtSigned(pos.unrealised_pnl_usdt)}</span>`
+      : `<span class="openline">Flat · no open position</span>`;
+    let status, statusCls = "cstatus";
+    if (cid === leaderId) { status = "Leading"; statusCls += " hot"; }
+    else if (c.eligible) { status = "Eligible"; statusCls += " elig"; }
+    else if (pos) { status = "In position"; statusCls += " hot"; }
     else if (c.closed_trades === 0) status = "No closes yet";
     else status = "Not eligible yet";
-    tr.innerHTML = `
-      <td><div class="clerk"><div class="avatar">${cid}</div><div>
-        <div class="nm">${c.name}${cid === leaderId ? '<span class="badge">Leader</span>' : ""}</div>
-        <div class="pr">±${c.params.band_bps} band · stop ${c.params.stop_bps} · hold ${c.params.max_hold_s/3600}h</div>
-      </div></div></td>
-      <td>${c.params.band_bps} bps</td>
-      <td>${c.closed_trades}</td>
-      <td>${posHtml}</td>
-      <td class="${c.net_pnl_usdt > 0 ? "pos" : (c.net_pnl_usdt < 0 ? "neg" : "")}">${fmtSigned(c.net_pnl_usdt)} USDT</td>
-      <td>${fmt(c.equity_usdt, 2)}</td>
-      <td>${fmt(c.worst_drawdown_usdt)}</td>
-      <td><span class="${statusCls}">${status}</span></td>`;
-    body.appendChild(tr);
+    row.innerHTML = `
+      <div class="crank">0${rank}</div>
+      <div class="cwho"><div class="cava">${cid}</div><div>
+        <div class="cname">${c.name}${cid === leaderId ? '<span class="cbadge">Leader</span>' : ""} ${move}</div>
+        <div class="cparams">Clerk ${cid} · band ±${c.params.band_bps} · stop ${c.params.stop_bps} · hold ${c.params.max_hold_s/3600}h</div>
+      </div></div>
+      <div class="cspark">${sparkSvg(cid)}<div class="sl">Equity curve · USDT</div></div>
+      <div class="cnums">
+        <div class="cnum"><label>Net P&amp;L</label><b class="${c.net_pnl_usdt > 0 ? "pos" : (c.net_pnl_usdt < 0 ? "neg" : "")}" data-count="${c.net_pnl_usdt}" data-fmt="signed" data-key="pnl_${cid}">0.0000</b></div>
+        <div class="cnum"><label>Equity</label><b data-count="${c.equity_usdt}" data-fmt="2dp" data-key="eq_${cid}">0.00</b></div>
+        <div class="cnum"><label>Closed trades</label><b>${c.closed_trades}</b>${posHtml}</div>
+        <div class="cnum"><label>Worst drawdown</label><b>${fmt(c.worst_drawdown_usdt)}</b></div>
+      </div>
+      <div class="${statusCls}"><span class="pulse"></span>${status}</div>`;
+    board.appendChild(row);
   });
-  const note = $("leaderNote");
-  if (S.leader) {
-    note.innerHTML = `<span class="gold">Leader: Clerk ${S.leader.clerk}.</span> ${S.leader.reason}. Only this clerk may place live trades, and only through ClerkVault once it is deployed.`;
-  } else {
-    note.innerHTML = `<b>No leader yet.</b> Promotion requires at least 5 closed shadow trades and a positive net P and L after real costs. Until a clerk earns it, the live executor stays silent. Standings as of ${clockTime(S.ts)} (block ${Number(S.block).toLocaleString()}).`;
-  }
-}
-const EVT_ICON = {entry:"↗", exit:"↘", leadership:"◆", pass:"○"};
-function renderFeed(){
-  if (!A) return;
-  const feed = $("feed");
-  if (!A.items || !A.items.length) {
-    feed.innerHTML = `<p class="empty">The log holds only cycle checks so far. The first entry or exit will appear here the moment a clerk acts.</p>`;
-    return;
-  }
-  feed.innerHTML = "";
-  A.items.forEach(it => {
-    const d = document.createElement("div");
-    d.className = "evt " + it.kind;
-    d.innerHTML = `<div class="ic">${EVT_ICON[it.kind] || "·"}</div>
-      <div><div class="tt"></div><div class="dd"></div></div>
-      <div class="tm">${clockTime(it.ts)}<br>${relTime(it.ts)}</div>`;
-    d.querySelector(".tt").textContent = it.title;
-    d.querySelector(".dd").textContent = it.detail;
-    feed.appendChild(d);
+  board.querySelectorAll("[data-count]").forEach(el => {
+    const to = parseFloat(el.dataset.count);
+    const f = el.dataset.fmt === "signed" ? (v => fmtSigned(v)) : (v => fmt(v, 2));
+    tween(el, el.dataset.key, to, f, 1000, true);
   });
 }
 
-/* ---------- chat ---------- */
+/* ---------- pool visual ---------- */
+function renderPoolVisual(){
+  if (!H || !H.pool) return;
+  const p = H.pool;
+  const wv = p.whsk_value_usdt || 0, uv = p.usdt_balance || 0, tot = wv + uv;
+  if (tot > 0) {
+    $("segW").style.width = (wv / tot * 100).toFixed(2) + "%";
+    $("segU").style.width = (uv / tot * 100).toFixed(2) + "%";
+  }
+  $("segWT").textContent = `WHSK · ${fmtInt(p.whsk_balance)}`;
+  $("segWS").textContent = `Worth ${fmt(wv, 0)} USDT`;
+  $("segUT").textContent = `USDT · ${fmtInt(p.usdt_balance)}`;
+  $("segUS").textContent = `${tot > 0 ? (uv / tot * 100).toFixed(1) : "…"}% of pool value`;
+  $("poolTotal").textContent = fmt(tot, 0) + " USDT";
+  $("poolWhsk").textContent = fmtInt(p.whsk_balance);
+  $("poolUsdt").textContent = fmtInt(p.usdt_balance);
+  $("poolNote").textContent = `Pool 0x4ff515761864e7838B0AdB8b5b2B8B7A068905dC · WHSK/USDT · 0.3% fee tier · balances ${p.source === "rpc" ? "read live from chain " + relTime(p.ts) : "from the Phase 0 census, " + (p.ts || "")}`;
+}
+
+/* ---------- vault gauges ---------- */
+let gaugesDone = false;
+function fireGauges(){
+  if (gaugesDone) return; gaugesDone = true;
+  document.querySelectorAll("#vaultGauges .fill").forEach(f => { f.style.width = f.dataset.w + "%"; });
+}
+
+/* ---------- chat (deterministic, over the live record) ---------- */
 const chatlog = $("chatlog");
 function addMsg(cls, text){
   const d = document.createElement("div");
@@ -547,8 +944,23 @@ $("chatform").addEventListener("submit", e => {
   addMsg("bot", answer(v));
 });
 addMsg("bot", "This desk answers from the live tournament record: the standings file the engine rewrites every five minutes, and the hash chained log behind it. Figures are quoted exactly as recorded. Right now the tournament is young: no clerk has closed a trade yet, so there is no leader, and I will say that plainly rather than invent one.");
+
+/* ---------- reveal on scroll ---------- */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if (en.isIntersecting) {
+      en.target.classList.add("in");
+      if (en.target.id === "vaultSec") fireGauges();
+      io.unobserve(en.target);
+    }
+  });
+}, {threshold: 0.12});
+document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+
+/* ---------- init ---------- */
 loadData();
 refreshPool();
+startHeroFx();
 setInterval(refreshPool, 30000);
 setInterval(loadData, 60000);
 </script>
