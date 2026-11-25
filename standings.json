@@ -1,10 +1,10 @@
 {
-  "ts": "2026-11-25T16:01:39Z",
-  "block": 30637682,
+  "ts": "2026-11-25T16:16:41Z",
+  "block": 30638133,
   "spot_usdt_per_whsk": 0.07961335411420313,
-  "anchor_usdt_per_whsk": 0.08026904377019436,
-  "twap_tick": -301549,
-  "deviation_bps": -81.6864914783877,
+  "anchor_usdt_per_whsk": 0.07999660604959492,
+  "twap_tick": -301583,
+  "deviation_bps": -47.908524413422526,
   "gas_per_fill_usdt": 0.0042564966840151555,
   "leader": null,
   "clerks": {
@@ -22,7 +22,7 @@
         "direction": "long",
         "whsk_amount": 623.2729157283023,
         "entry_price": 0.08022167936107791,
-        "age_s": 1202,
+        "age_s": 2104,
         "unrealised_pnl_usdt": -0.383428
       },
       "equity_usdt": 499.616572,
