@@ -1,20 +1,41 @@
 {
-  "generated_at": "2026-11-25T14:50:04Z",
-  "log_records": 263,
+  "generated_at": "2026-11-25T15:05:07Z",
+  "log_records": 266,
   "today": {
     "date": "2026-11-25",
     "entries": 0,
     "exits": 0
   },
   "last_cycle": {
-    "ts": "2026-11-25T14:46:44Z",
-    "block": 30635435,
+    "ts": "2026-11-25T15:01:40Z",
+    "block": 30635883,
     "spot": 0.08075974698617001,
-    "anchor": 0.08078438722368163,
-    "deviation_bps": -3.050123713062014,
+    "anchor": 0.08077630959272235,
+    "deviation_bps": -2.0504287254319298,
     "leader": null
   },
   "items": [
+    {
+      "ts": "2026-11-25T15:01:40Z",
+      "kind": "pass",
+      "clerk": null,
+      "title": "Cycle check, all clerks passed",
+      "detail": "Deviation -2.1 bps sat inside every entry band (the tightest is Clerk A at 75 bps), so no clerk acted."
+    },
+    {
+      "ts": "2026-11-25T14:56:37Z",
+      "kind": "pass",
+      "clerk": null,
+      "title": "Cycle check, all clerks passed",
+      "detail": "Deviation -2.1 bps sat inside every entry band (the tightest is Clerk A at 75 bps), so no clerk acted."
+    },
+    {
+      "ts": "2026-11-25T14:51:38Z",
+      "kind": "pass",
+      "clerk": null,
+      "title": "Cycle check, all clerks passed",
+      "detail": "Deviation -3.1 bps sat inside every entry band (the tightest is Clerk A at 75 bps), so no clerk acted."
+    },
     {
       "ts": "2026-11-25T14:46:44Z",
       "kind": "pass",
@@ -45,27 +66,6 @@
     },
     {
       "ts": "2026-11-25T14:26:37Z",
-      "kind": "pass",
-      "clerk": null,
-      "title": "Cycle check, all clerks passed",
-      "detail": "Deviation +0.1 bps sat inside every entry band (the tightest is Clerk A at 75 bps), so no clerk acted."
-    },
-    {
-      "ts": "2026-11-25T14:21:39Z",
-      "kind": "pass",
-      "clerk": null,
-      "title": "Cycle check, all clerks passed",
-      "detail": "Deviation +0.1 bps sat inside every entry band (the tightest is Clerk A at 75 bps), so no clerk acted."
-    },
-    {
-      "ts": "2026-11-25T14:16:45Z",
-      "kind": "pass",
-      "clerk": null,
-      "title": "Cycle check, all clerks passed",
-      "detail": "Deviation +0.1 bps sat inside every entry band (the tightest is Clerk A at 75 bps), so no clerk acted."
-    },
-    {
-      "ts": "2026-11-25T14:11:39Z",
       "kind": "pass",
       "clerk": null,
       "title": "Cycle check, all clerks passed",
