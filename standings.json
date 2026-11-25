@@ -1,11 +1,11 @@
 {
-  "ts": "2026-11-25T16:16:41Z",
-  "block": 30638133,
-  "spot_usdt_per_whsk": 0.07961335411420313,
-  "anchor_usdt_per_whsk": 0.07999660604959492,
-  "twap_tick": -301583,
-  "deviation_bps": -47.908524413422526,
-  "gas_per_fill_usdt": 0.0042564966840151555,
+  "ts": "2026-11-25T16:31:45Z",
+  "block": 30638585,
+  "spot_usdt_per_whsk": 0.07941239571639605,
+  "anchor_usdt_per_whsk": 0.07974103881403506,
+  "twap_tick": -301615,
+  "deviation_bps": -41.213796876341526,
+  "gas_per_fill_usdt": 0.004245752522267318,
   "leader": null,
   "clerks": {
     "A": {
@@ -22,11 +22,11 @@
         "direction": "long",
         "whsk_amount": 623.2729157283023,
         "entry_price": 0.08022167936107791,
-        "age_s": 2104,
-        "unrealised_pnl_usdt": -0.383428
+        "age_s": 3008,
+        "unrealised_pnl_usdt": -0.50868
       },
-      "equity_usdt": 499.616572,
-      "worst_drawdown_usdt": 0.383428,
+      "equity_usdt": 499.49132,
+      "worst_drawdown_usdt": 0.50868,
       "eligible": false
     },
     "B": {

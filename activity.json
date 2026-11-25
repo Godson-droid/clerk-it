@@ -1,20 +1,41 @@
 {
-  "generated_at": "2026-11-25T16:20:06Z",
-  "log_records": 282,
+  "generated_at": "2026-11-25T16:35:10Z",
+  "log_records": 285,
   "today": {
     "date": "2026-11-25",
     "entries": 1,
     "exits": 0
   },
   "last_cycle": {
-    "ts": "2026-11-25T16:16:41Z",
-    "block": 30638133,
-    "spot": 0.07961335411420313,
-    "anchor": 0.07999660604959492,
-    "deviation_bps": -47.908524413422526,
+    "ts": "2026-11-25T16:31:45Z",
+    "block": 30638585,
+    "spot": 0.07941239571639605,
+    "anchor": 0.07974103881403506,
+    "deviation_bps": -41.213796876341526,
     "leader": null
   },
   "items": [
+    {
+      "ts": "2026-11-25T16:31:45Z",
+      "kind": "pass",
+      "clerk": null,
+      "title": "Cycle check, all clerks passed",
+      "detail": "Deviation -41.2 bps sat inside every entry band (the tightest is Clerk A at 75 bps), so no clerk acted."
+    },
+    {
+      "ts": "2026-11-25T16:26:38Z",
+      "kind": "pass",
+      "clerk": null,
+      "title": "Cycle check, all clerks passed",
+      "detail": "Deviation -47.4 bps sat inside every entry band (the tightest is Clerk A at 75 bps), so no clerk acted."
+    },
+    {
+      "ts": "2026-11-25T16:21:41Z",
+      "kind": "pass",
+      "clerk": null,
+      "title": "Cycle check, all clerks passed",
+      "detail": "Deviation -38.0 bps sat inside every entry band (the tightest is Clerk A at 75 bps), so no clerk acted."
+    },
     {
       "ts": "2026-11-25T16:16:41Z",
       "kind": "pass",
@@ -51,32 +72,11 @@
       "detail": "Deviation -93.6 bps. No clerk opened or closed a position this cycle; open positions and cooldowns govern who may act."
     },
     {
-      "ts": "2026-11-25T15:51:38Z",
-      "kind": "pass",
-      "clerk": null,
-      "title": "Cycle check, all clerks passed",
-      "detail": "Deviation -105.5 bps. No clerk opened or closed a position this cycle; open positions and cooldowns govern who may act."
-    },
-    {
-      "ts": "2026-11-25T15:46:40Z",
-      "kind": "pass",
-      "clerk": null,
-      "title": "Cycle check, all clerks passed",
-      "detail": "Deviation -117.3 bps. No clerk opened or closed a position this cycle; open positions and cooldowns govern who may act."
-    },
-    {
       "ts": "2026-11-25T15:41:37Z",
       "kind": "entry",
       "clerk": "A",
       "title": "Clerk A (Tight) opened LONG",
       "detail": "Deviation -81.8 bps crossed the entry band. Shadow size 50 USDT at spot 0.079971 USDT per WHSK (623.27 WHSK), gas 0.0043 USDT priced through the real quoter."
-    },
-    {
-      "ts": "2026-11-25T15:36:42Z",
-      "kind": "pass",
-      "clerk": null,
-      "title": "Cycle check, all clerks passed",
-      "detail": "Deviation -12.3 bps sat inside every entry band (the tightest is Clerk A at 75 bps), so no clerk acted."
     }
   ]
 }
