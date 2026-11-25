@@ -1,11 +1,11 @@
 {
-  "ts": "2026-11-25T14:31:37Z",
-  "block": 30634982,
-  "spot_usdt_per_whsk": 0.08079324543809183,
-  "anchor_usdt_per_whsk": 0.08079246566240397,
-  "twap_tick": -301484,
-  "deviation_bps": 0.09651589185422083,
-  "gas_per_fill_usdt": 0.004319579109865802,
+  "ts": "2026-11-25T14:46:44Z",
+  "block": 30635435,
+  "spot_usdt_per_whsk": 0.08075974698617001,
+  "anchor_usdt_per_whsk": 0.08078438722368163,
+  "twap_tick": -301485,
+  "deviation_bps": -3.050123713062014,
+  "gas_per_fill_usdt": 0.004317788128301072,
   "leader": null,
   "clerks": {
     "A": {
