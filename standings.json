@@ -1,11 +1,11 @@
 {
-  "ts": "2026-11-25T16:46:43Z",
-  "block": 30639035,
-  "spot_usdt_per_whsk": 0.07907225297511952,
-  "anchor_usdt_per_whsk": 0.07949423667456654,
-  "twap_tick": -301646,
-  "deviation_bps": -53.08355889679595,
-  "gas_per_fill_usdt": 0.004227566924305216,
+  "ts": "2026-11-25T17:01:42Z",
+  "block": 30639484,
+  "spot_usdt_per_whsk": 0.07873306043501424,
+  "anchor_usdt_per_whsk": 0.07931955031350547,
+  "twap_tick": -301668,
+  "deviation_bps": -73.94014163887297,
+  "gas_per_fill_usdt": 0.004209432128475238,
   "leader": null,
   "clerks": {
     "A": {
@@ -16,17 +16,11 @@
         "max_hold_s": 43200,
         "cooldown_s": 3600
       },
-      "closed_trades": 0,
-      "net_pnl_usdt": 0.0,
-      "open_position": {
-        "direction": "long",
-        "whsk_amount": 623.2729157283023,
-        "entry_price": 0.08022167936107791,
-        "age_s": 3906,
-        "unrealised_pnl_usdt": -0.720682
-      },
-      "equity_usdt": 499.279318,
-      "worst_drawdown_usdt": 0.720682,
+      "closed_trades": 1,
+      "net_pnl_usdt": -0.952957,
+      "open_position": null,
+      "equity_usdt": 499.047043,
+      "worst_drawdown_usdt": 0.952957,
       "eligible": false
     },
     "B": {
