@@ -1,10 +1,10 @@
 {
-  "ts": "2026-11-27T15:16:39Z",
-  "block": 30722733,
+  "ts": "2026-11-27T15:31:52Z",
+  "block": 30723189,
   "spot_usdt_per_whsk": 0.0796793720688218,
-  "anchor_usdt_per_whsk": 0.07955785432674468,
-  "twap_tick": -301638,
-  "deviation_bps": 15.274135169360825,
+  "anchor_usdt_per_whsk": 0.07960560097461017,
+  "twap_tick": -301632,
+  "deviation_bps": 9.267073335097464,
   "gas_per_fill_usdt": 0.004260026308009098,
   "leader": null,
   "clerks": {
